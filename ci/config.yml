@@ -17,9 +17,6 @@ global:
   cis3bucket:  s3://quickstart-ci-bucket
  
 tests:
-  quickstart-microsoft-wapadfst1:
-    template_file: quickstart-microsoft-wapadfs-example1.template
-    parameter_input: quickstart-microsoft-wapadfs-exampleparms1.json
-  quickstart-microsoft-wapadfst2:
-    template_file: quickstart-microsoft-wapadfs-example2.template
-    parameter_input: quickstart-microsoft-wapadfs-exampleparms2.json
+  master-template:
+    template_file: WAP_ADFS_Master.template
+    parameter_input: WAP_ADFS_Master.json
