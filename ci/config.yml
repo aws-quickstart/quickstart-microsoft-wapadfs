@@ -1,8 +1,7 @@
 global:
-  qsname: quickstart-microsoft-wapadfs
+  falseqsname: quickstart-microsoft-wapadfs
+  marketplace-ami: 
   owner: quickstart-eng@amazon.com
-  marketplace-ami: false
-  reporting: true
   regions:
     - ap-northeast-1
     - ap-northeast-2
@@ -15,8 +14,8 @@ global:
     - us-east-1
     - us-west-1
     - us-west-2
-  cis3bucket:  s3://quickstart-ci-bucket
- 
+  reporting: true
+
 tests:
   master-template:
     template_file: WAP_ADFS_Master.template
