@@ -150,13 +150,13 @@
         "WAP1EIP": {
             "Type": "AWS::EC2::EIP",
             "Properties": {
-                "Domain": "VPCID"
+                "Domain": "vpc"
             }
         },
         "WAP2EIP": {
             "Type": "AWS::EC2::EIP",
             "Properties": {
-                "Domain": "VPCID"
+                "Domain": "vpc"
             }
         },
         "WAP1NetworkInterface": {
