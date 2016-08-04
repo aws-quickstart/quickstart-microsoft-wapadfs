@@ -455,7 +455,6 @@
                 "InstanceType": {
                     "Ref": "WAPADFSInstanceType"
                 },
-                "EbsOptimized": "true",
                 "NetworkInterfaces": [
                     {
                         "NetworkInterfaceId": {
@@ -729,7 +728,6 @@
                 "InstanceType": {
                     "Ref": "WAPADFSInstanceType"
                 },
-                "EbsOptimized": "true",
                 "NetworkInterfaces": [
                     {
                         "NetworkInterfaceId": {
@@ -1045,7 +1043,6 @@
                 "InstanceType": {
                     "Ref": "WAPADFSInstanceType"
                 },
-                "EbsOptimized": "true",
                 "NetworkInterfaces": [
                     {
                         "DeleteOnTermination": "true",
@@ -1371,7 +1368,6 @@
                 "InstanceType": {
                     "Ref": "WAPADFSInstanceType"
                 },
-                "EbsOptimized": "true",
                 "NetworkInterfaces": [
                     {
                         "DeleteOnTermination": "true",
