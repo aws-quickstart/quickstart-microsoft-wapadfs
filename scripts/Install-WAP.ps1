@@ -27,6 +27,9 @@ try {
     $CertificateThumbprint = (dir Cert:\LocalMachine\My)[0].thumbprint
 
     Install-WindowsFeature Web-Application-Proxy -IncludeManagementTools
+
+    while (-not (Resolve-DnsName -Name "sts.$DomainDNSName" -ErrorAction SilentlyContinue)) { Write-Verbose "Unable to resolve sts.$DomainDNSName. Waiting for 5 seconds before retrying."; Start-Sleep 5 }
+
     Install-WebApplicationProxy –CertificateThumbprint $CertificateThumbprint -FederationServiceName "sts.$DomainDNSName" -FederationServiceTrustCredential $Credential
 
     Write-Verbose "Sending CFN Signal @ $(Get-Date)"
