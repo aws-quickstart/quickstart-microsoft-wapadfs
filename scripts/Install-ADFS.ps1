@@ -122,6 +122,8 @@ try {
         Import-PfxCertificate –FilePath "\\$DCName\CertEnroll\adfs.pfx" -CertStoreLocation cert:\localMachine\my -Password $Pass
         $CertificateThumbprint = (dir Cert:\LocalMachine\My)[0].thumbprint
 
+        & setspn -s host/sts.$DomainDNSName $DomainNetBIOSName\$Username
+
         Install-WindowsFeature ADFS-Federation -IncludeManagementTools
         Add-AdfsFarmNode -CertificateThumbprint $CertificateThumbprint -ServiceAccountCredential $Credential -PrimaryComputerName "adfs1.$DomainDNSName" -PrimaryComputerPort 80
     }
