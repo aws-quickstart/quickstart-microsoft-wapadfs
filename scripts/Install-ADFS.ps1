@@ -105,6 +105,8 @@ try {
         $ADFScertificate = (dir Cert:\LocalMachine\My)[0]
         Export-PfxCertificate -Cert $ADFScertificate -FilePath "\\$DCName\CertEnroll\adfs.pfx" -Password $pass
 
+        & setspn -s host/sts.$DomainDNSName $DomainNetBIOSName\$Username
+
         Install-WindowsFeature ADFS-Federation -IncludeManagementTools
         $CertificateThumbprint = (dir Cert:\LocalMachine\My)[0].thumbprint
         Install-AdfsFarm -CertificateThumbprint $CertificateThumbprint -FederationServiceDisplayName ADFS -FederationServiceName "sts.$DomainDNSName" -ServiceAccountCredential $Credential
