@@ -124,6 +124,8 @@ try {
 
         & setspn -s host/sts.$DomainDNSName $DomainNetBIOSName\$Username
 
+        while (-not (Resolve-DnsName -Name "adfs1.$DomainDNSName" -ErrorAction SilentlyContinue)) { Write-Verbose "Unable to resolve adfs1.$DomainDNSName. Waiting for 5 seconds before retrying."; Start-Sleep 5 }
+
         Install-WindowsFeature ADFS-Federation -IncludeManagementTools
         Add-AdfsFarmNode -CertificateThumbprint $CertificateThumbprint -ServiceAccountCredential $Credential -PrimaryComputerName "adfs1.$DomainDNSName" -PrimaryComputerPort 80
     }
