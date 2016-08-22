@@ -7,3 +7,6 @@
 [submodule "submodules/quickstart-microsoft-rdgateway"]
 	path = submodules/quickstart-microsoft-rdgateway
 	url = git@github.com:aws-quickstart/quickstart-microsoft-rdgateway.git
+[submodule "submodules/quickstart-microsoft-activedirectory"]
+	path = submodules/quickstart-microsoft-activedirectory
+	url = git@github.com:aws-quickstart/quickstart-microsoft-activedirectory.git
