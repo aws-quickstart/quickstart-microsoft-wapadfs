@@ -289,13 +289,13 @@
                                 }
                             },
                             "C:\\cfn\\scripts\\Unzip-Archive.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Unzip-Archive.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1"
                             },
                             "C:\\cfn\\modules\\AWSQuickStart.zip": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/modules/AWSQuickStart.zip"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip"
                             },
                             "C:\\cfn\\scripts\\Join-Domain.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Join-Domain.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1"
                             },
                             "C:\\cfn\\scripts\\Install-WAP.ps1": {
                                 "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/scripts/Install-WAP.ps1"
@@ -563,13 +563,13 @@
                                 }
                             },
                             "C:\\cfn\\scripts\\Unzip-Archive.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Unzip-Archive.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1"
                             },
                             "C:\\cfn\\modules\\AWSQuickStart.zip": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/modules/AWSQuickStart.zip"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip"
                             },
                             "C:\\cfn\\scripts\\Join-Domain.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Join-Domain.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1"
                             },
                             "C:\\cfn\\scripts\\Install-WAP.ps1": {
                                 "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/scripts/Install-WAP.ps1"
@@ -836,22 +836,22 @@
                                 }
                             },
                             "C:\\cfn\\scripts\\Unzip-Archive.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Unzip-Archive.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1"
                             },
                             "C:\\cfn\\modules\\AWSQuickStart.zip": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/modules/AWSQuickStart.zip"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip"
                             },
                             "C:\\cfn\\scripts\\Join-Domain.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Join-Domain.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1"
                             },
                             "C:\\cfn\\scripts\\Install-ADFS.ps1": {
                                 "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/scripts/Install-ADFS.ps1"
                             },
                             "C:\\cfn\\scripts\\Disable-AutoLogon.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Disable-AutoLogon.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Disable-AutoLogon.ps1"
                             },
                             "C:\\cfn\\scripts\\Enable-AutoLogon.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Enable-AutoLogon.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Enable-AutoLogon.ps1"
                             },
                             "C:\\cfn\\scripts\\Install.bat": {
                                 "content": {
@@ -1162,22 +1162,22 @@
                                 }
                             },
                             "C:\\cfn\\scripts\\Unzip-Archive.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Unzip-Archive.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1"
                             },
                             "C:\\cfn\\modules\\AWSQuickStart.zip": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/modules/AWSQuickStart.zip"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip"
                             },
                             "C:\\cfn\\scripts\\Join-Domain.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Join-Domain.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1"
                             },
                             "C:\\cfn\\scripts\\Install-ADFS.ps1": {
                                 "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/scripts/Install-ADFS.ps1"
                             },
                             "C:\\cfn\\scripts\\Disable-AutoLogon.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Disable-AutoLogon.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Disable-AutoLogon.ps1"
                             },
                             "C:\\cfn\\scripts\\Enable-AutoLogon.ps1": {
-                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/microsoft-utilities/scripts/Enable-AutoLogon.ps1"
+                                "source": "https://s3.amazonaws.com/quickstart-reference/microsoft/wapadfs/latest/submodules/quickstart-microsoft-utilities/scripts/Enable-AutoLogon.ps1"
                             },
                             "C:\\cfn\\scripts\\Install.bat": {
                                 "content": {
