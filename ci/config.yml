@@ -16,21 +16,21 @@ global:
     - us-west-2
   reporting: true
 tests:
-  master-old:
-    parameter_input: WAP_ADFS_Master.json
-    regions:
-      - ap-northeast-1
-      - ap-northeast-2
-      - ap-south-1
-      - ap-southeast-1
-      - ap-southeast-2
-      - eu-central-1
-      - eu-west-1
-      # - sa-east-1 Unsupported only in CI due to GetAZs on ref acct
-      - us-east-1
-      - us-west-1
-      - us-west-2
-    template_file: WAP_ADFS_Master.template
   master:
     parameter_input: wap-adfs-master.json
     template_file: wap-adfs-master.template
+#  master-old:
+#    parameter_input: WAP_ADFS_Master.json
+#    regions:
+#      - ap-northeast-1
+#      - ap-northeast-2
+#      - ap-south-1
+#      - ap-southeast-1
+#      - ap-southeast-2
+#      - eu-central-1
+#      - eu-west-1
+#      # - sa-east-1 Unsupported only in CI due to GetAZs on ref acct
+#      - us-east-1
+#      - us-west-1
+#      - us-west-2
+#    template_file: WAP_ADFS_Master.template
