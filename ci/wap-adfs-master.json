@@ -41,15 +41,15 @@
     },
     {
         "ParameterKey": "DomainNetBIOSName",
-        "ParameterValue": "example"
+        "ParameterValue": "EXAMPLE"
     },
     {
         "ParameterKey": "KeyPairName",
-        "ParameterValue": "cikey"
+        "ParameterValue": "$[alfred_getkeypair]"
     },
     {
-        "ParameterKey": "NATInstanceType",
-        "ParameterValue": "t2.small"
+        "ParameterKey": "NumberOfRDGWHosts",
+        "ParameterValue": "1"
     },
     {
         "ParameterKey": "PrivateSubnet1CIDR",
@@ -68,32 +68,12 @@
         "ParameterValue": "10.0.144.0/20"
     },
     {
-        "ParameterKey": "RDGW1InstanceType",
-        "ParameterValue": "t2.large"
-    },
-    {
-        "ParameterKey": "RDGW1NetBIOSName",
-        "ParameterValue": "RDGW1"
-    },
-    {
-        "ParameterKey": "RDGW1PrivateIP",
-        "ParameterValue": "10.0.128.11"
-    },
-    {
-        "ParameterKey": "RDGW2InstanceType",
-        "ParameterValue": "t2.large"
-    },
-    {
-        "ParameterKey": "RDGW2NetBIOSName",
-        "ParameterValue": "RDGW2"
-    },
-    {
-        "ParameterKey": "RDGW2PrivateIP",
-        "ParameterValue": "10.0.144.11"
-    },
-    {
         "ParameterKey": "RDGWCIDR",
         "ParameterValue": "10.0.0.0/16"
+    },
+    {
+        "ParameterKey": "RDGWInstanceType",
+        "ParameterValue": "t2.large"
     },
     {
         "ParameterKey": "RestoreModePassword",
