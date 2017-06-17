@@ -23,7 +23,6 @@
                     },
                     "Parameters": [
                         "KeyPairName",
-                        "ADServer1NetBIOSName",
                         "WAPADFSInstanceType"
                     ]
                 },
@@ -36,7 +35,8 @@
                         "DomainNetBIOSName",
                         "RestoreModePassword",
                         "DomainAdminUser",
-                        "DomainAdminPassword"
+                        "DomainAdminPassword",
+                        "DomainMemberSGID"
                     ]
                 },
                 {
@@ -50,9 +50,6 @@
                 }
             ],
             "ParameterLabels": {
-                "ADServer1NetBIOSName": {
-                    "default": "Domain Controller 1 NetBIOS Name"
-                },
                 "DomainAdminPassword": {
                     "default": "Domain Admin Password"
                 },
@@ -102,14 +99,6 @@
         }
     },
     "Parameters": {
-        "ADServer1NetBIOSName": {
-            "AllowedPattern": "[a-zA-Z0-9]+",
-            "Default": "DC1",
-            "Description": "NetBIOS name of the Active Directory server acting as the Certificate Authority (up to 15 characters)",
-            "MaxLength": "15",
-            "MinLength": "1",
-            "Type": "String"
-        },
         "DomainAdminPassword": {
             "AllowedPattern": "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*",
             "Description": "Password for the domain admin user. Must be at least 8 characters containing letters, numbers and symbols",
@@ -616,6 +605,40 @@
                                 },
                                 "authentication": "S3AccessCreds"
                             },
+                            "C:\\cfn\\scripts\\Disable-CredSSP.ps1": {
+                                "source": {
+                                    "Fn::Sub": [
+                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1",
+                                        {
+                                            "QSS3Region": {
+                                                "Fn::If": [
+                                                    "GovCloudCondition",
+                                                    "s3-us-gov-west-1",
+                                                    "s3"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "authentication": "S3AccessCreds"
+                            },
+                            "C:\\cfn\\scripts\\Enable-CredSSP.ps1": {
+                                "source": {
+                                    "Fn::Sub": [
+                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1",
+                                        {
+                                            "QSS3Region": {
+                                                "Fn::If": [
+                                                    "GovCloudCondition",
+                                                    "s3-us-gov-west-1",
+                                                    "s3"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "authentication": "S3AccessCreds"
+                            },
                             "C:\\cfn\\scripts\\Install-WAP.ps1": {
                                 "source": {
                                     "Fn::Sub": [
@@ -717,7 +740,11 @@
                                 },
                                 "waitAfterCompletion": "forever"
                             },
-                            "d-install-wap": {
+                            "d-enable-credssp": {
+                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Enable-CredSSP.ps1",
+                                "waitAfterCompletion": "0"
+                            },
+                            "e-install-wap": {
                                 "command": {
                                     "Fn::Join": [
                                         "",
@@ -725,10 +752,6 @@
                                             "powershell.exe -Command \"C:\\cfn\\scripts\\Install-WAP.ps1 -DomainDNSName '",
                                             {
                                                 "Ref": "DomainDNSName"
-                                            },
-                                            "' -DCName '",
-                                            {
-                                                "Ref": "ADServer1NetBIOSName"
                                             },
                                             "' -DomainNetBIOSName '",
                                             {
@@ -746,6 +769,14 @@
                                         ]
                                     ]
                                 },
+                                "waitAfterCompletion": "0"
+                            },
+                            "f-disable-credssp": {
+                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Disable-CredSSP.ps1\"",
+                                "waitAfterCompletion": "0"
+                            },
+                            "g-signal-success": {
+                                "command": "powershell -Command \"Write-AWSQuickStartStatus\"",
                                 "waitAfterCompletion": "0"
                             }
                         }
@@ -940,6 +971,40 @@
                                 },
                                 "authentication": "S3AccessCreds"
                             },
+                            "C:\\cfn\\scripts\\Disable-CredSSP.ps1": {
+                                "source": {
+                                    "Fn::Sub": [
+                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1",
+                                        {
+                                            "QSS3Region": {
+                                                "Fn::If": [
+                                                    "GovCloudCondition",
+                                                    "s3-us-gov-west-1",
+                                                    "s3"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "authentication": "S3AccessCreds"
+                            },
+                            "C:\\cfn\\scripts\\Enable-CredSSP.ps1": {
+                                "source": {
+                                    "Fn::Sub": [
+                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1",
+                                        {
+                                            "QSS3Region": {
+                                                "Fn::If": [
+                                                    "GovCloudCondition",
+                                                    "s3-us-gov-west-1",
+                                                    "s3"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "authentication": "S3AccessCreds"
+                            },
                             "C:\\cfn\\scripts\\Install-WAP.ps1": {
                                 "source": {
                                     "Fn::Sub": [
@@ -1041,7 +1106,11 @@
                                 },
                                 "waitAfterCompletion": "forever"
                             },
-                            "d-install-wap": {
+                            "d-enable-credssp": {
+                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Enable-CredSSP.ps1",
+                                "waitAfterCompletion": "0"
+                            },
+                            "e-install-wap": {
                                 "command": {
                                     "Fn::Join": [
                                         "",
@@ -1049,10 +1118,6 @@
                                             "powershell.exe -Command \"C:\\cfn\\scripts\\Install-WAP.ps1 -DomainDNSName '",
                                             {
                                                 "Ref": "DomainDNSName"
-                                            },
-                                            "' -DCName '",
-                                            {
-                                                "Ref": "ADServer1NetBIOSName"
                                             },
                                             "' -DomainNetBIOSName '",
                                             {
@@ -1070,6 +1135,14 @@
                                         ]
                                     ]
                                 },
+                                "waitAfterCompletion": "0"
+                            },
+                            "f-disable-credssp": {
+                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Disable-CredSSP.ps1\"",
+                                "waitAfterCompletion": "0"
+                            },
+                            "g-signal-success": {
+                                "command": "powershell -Command \"Write-AWSQuickStartStatus\"",
                                 "waitAfterCompletion": "0"
                             }
                         }
@@ -1263,6 +1336,57 @@
                                 },
                                 "authentication": "S3AccessCreds"
                             },
+                            "C:\\cfn\\scripts\\Create-Share.ps1": {
+                                "source": {
+                                    "Fn::Sub": [
+                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Create-Share.ps1",
+                                        {
+                                            "QSS3Region": {
+                                                "Fn::If": [
+                                                    "GovCloudCondition",
+                                                    "s3-us-gov-west-1",
+                                                    "s3"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "authentication": "S3AccessCreds"
+                            },
+                            "C:\\cfn\\scripts\\Disable-CredSSP.ps1": {
+                                "source": {
+                                    "Fn::Sub": [
+                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1",
+                                        {
+                                            "QSS3Region": {
+                                                "Fn::If": [
+                                                    "GovCloudCondition",
+                                                    "s3-us-gov-west-1",
+                                                    "s3"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "authentication": "S3AccessCreds"
+                            },
+                            "C:\\cfn\\scripts\\Enable-CredSSP.ps1": {
+                                "source": {
+                                    "Fn::Sub": [
+                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1",
+                                        {
+                                            "QSS3Region": {
+                                                "Fn::If": [
+                                                    "GovCloudCondition",
+                                                    "s3-us-gov-west-1",
+                                                    "s3"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "authentication": "S3AccessCreds"
+                            },
                             "C:\\cfn\\scripts\\Install-ADFS.ps1": {
                                 "source": {
                                     "Fn::Sub": [
@@ -1279,71 +1403,6 @@
                                     ]
                                 },
                                 "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Disable-AutoLogon.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-AutoLogon.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Enable-AutoLogon.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-AutoLogon.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Install.bat": {
-                                "content": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Install-ADFS.ps1 -DomainDNSName '",
-                                            {
-                                                "Ref": "DomainDNSName"
-                                            },
-                                            "' -DCName '",
-                                            {
-                                                "Ref": "ADServer1NetBIOSName"
-                                            },
-                                            "' -DomainNetBIOSName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "' -UserName '",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "' -FirstServer\"",
-                                            "\n"
-                                        ]
-                                    ]
-                                }
                             }
                         },
                         "commands": {
@@ -1429,13 +1488,29 @@
                                 },
                                 "waitAfterCompletion": "forever"
                             },
-                            "d-enable-autologon": {
+                            "d-create-cert-share": {
                                 "command": {
                                     "Fn::Join": [
                                         "",
                                         [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Enable-AutoLogon.ps1",
-                                            " -UserName '",
+                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Create-Share.ps1",
+                                            " -Path 'c:\\cert'",
+                                            " -ShareName 'cert'",
+                                            " -FolderPath 'c:\\'",
+                                            " -FolderName 'cert'",
+                                            " -DomainNetBIOSName '",
+                                            {
+                                                "Ref": "DomainNetBIOSName"
+                                            },
+                                            "' -DomainAdminUser '",
+                                            {
+                                                "Ref": "DomainAdminUser"
+                                            },
+                                            "' -DomainAdminPassword '",
+                                            {
+                                                "Ref": "DomainAdminPassword"
+                                            },
+                                            "' -FullAccessUser '",
                                             {
                                                 "Ref": "DomainNetBIOSName"
                                             },
@@ -1443,23 +1518,49 @@
                                             {
                                                 "Ref": "DomainAdminUser"
                                             },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "' -StartupScript 'C:\\cfn\\scripts\\Install.bat'",
-                                            "\""
+                                            "'\""
                                         ]
                                     ]
                                 },
                                 "waitAfterCompletion": "0"
                             },
-                            "e-reboot": {
-                                "command": "powershell.exe -Command \"Restart-Computer -Force\"",
-                                "waitAfterCompletion": "forever"
+                            "e-enable-credssp": {
+                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Enable-CredSSP.ps1",
+                                "waitAfterCompletion": "0"
                             },
-                            "f-disable-autologon": {
-                                "command": "powershell.exe -Command \"C:\\cfn\\scripts\\Disable-AutoLogon.ps1\"",
+                            "f-install-adfs": {
+                                "command": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Install-ADFS.ps1 -DomainDNSName '",
+                                            {
+                                                "Ref": "DomainDNSName"
+                                            },
+                                            "' -DomainNetBIOSName '",
+                                            {
+                                                "Ref": "DomainNetBIOSName"
+                                            },
+                                            "' -UserName '",
+                                            {
+                                                "Ref": "DomainAdminUser"
+                                            },
+                                            "' -Password '",
+                                            {
+                                                "Ref": "DomainAdminPassword"
+                                            },
+                                            "' -FirstServer\""
+                                        ]
+                                    ]
+                                },
+                                "waitAfterCompletion": "0"
+                            },
+                            "g-disable-credssp": {
+                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Disable-CredSSP.ps1\"",
+                                "waitAfterCompletion": "0"
+                            },
+                            "h-signal-success": {
+                                "command": "powershell -Command \"Write-AWSQuickStartStatus\"",
                                 "waitAfterCompletion": "0"
                             }
                         }
@@ -1663,6 +1764,40 @@
                                 },
                                 "authentication": "S3AccessCreds"
                             },
+                            "C:\\cfn\\scripts\\Disable-CredSSP.ps1": {
+                                "source": {
+                                    "Fn::Sub": [
+                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1",
+                                        {
+                                            "QSS3Region": {
+                                                "Fn::If": [
+                                                    "GovCloudCondition",
+                                                    "s3-us-gov-west-1",
+                                                    "s3"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "authentication": "S3AccessCreds"
+                            },
+                            "C:\\cfn\\scripts\\Enable-CredSSP.ps1": {
+                                "source": {
+                                    "Fn::Sub": [
+                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1",
+                                        {
+                                            "QSS3Region": {
+                                                "Fn::If": [
+                                                    "GovCloudCondition",
+                                                    "s3-us-gov-west-1",
+                                                    "s3"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "authentication": "S3AccessCreds"
+                            },
                             "C:\\cfn\\scripts\\Install-ADFS.ps1": {
                                 "source": {
                                     "Fn::Sub": [
@@ -1679,71 +1814,6 @@
                                     ]
                                 },
                                 "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Disable-AutoLogon.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-AutoLogon.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Enable-AutoLogon.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-AutoLogon.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Install.bat": {
-                                "content": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Install-ADFS.ps1 -DomainDNSName '",
-                                            {
-                                                "Ref": "DomainDNSName"
-                                            },
-                                            "' -DCName '",
-                                            {
-                                                "Ref": "ADServer1NetBIOSName"
-                                            },
-                                            "' -DomainNetBIOSName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "' -UserName '",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "'\"",
-                                            "\n"
-                                        ]
-                                    ]
-                                }
                             }
                         },
                         "commands": {
@@ -1829,17 +1899,24 @@
                                 },
                                 "waitAfterCompletion": "forever"
                             },
-                            "d-enable-autologon": {
+                            "d-enable-credssp": {
+                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Enable-CredSSP.ps1",
+                                "waitAfterCompletion": "0"
+                            },
+                            "e-install-adfs": {
                                 "command": {
                                     "Fn::Join": [
                                         "",
                                         [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Enable-AutoLogon.ps1",
-                                            " -UserName '",
+                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Install-ADFS.ps1 -DomainDNSName '",
+                                            {
+                                                "Ref": "DomainDNSName"
+                                            },
+                                            "' -DomainNetBIOSName '",
                                             {
                                                 "Ref": "DomainNetBIOSName"
                                             },
-                                            "\\",
+                                            "' -UserName '",
                                             {
                                                 "Ref": "DomainAdminUser"
                                             },
@@ -1847,19 +1924,18 @@
                                             {
                                                 "Ref": "DomainAdminPassword"
                                             },
-                                            "' -StartupScript 'C:\\cfn\\scripts\\Install.bat'",
-                                            "\""
+                                            "'\""
                                         ]
                                     ]
                                 },
                                 "waitAfterCompletion": "0"
                             },
-                            "e-reboot": {
-                                "command": "powershell.exe -Command \"Restart-Computer -Force\"",
-                                "waitAfterCompletion": "forever"
+                            "f-disable-credssp": {
+                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Disable-CredSSP.ps1\"",
+                                "waitAfterCompletion": "0"
                             },
-                            "f-disable-autologon": {
-                                "command": "powershell.exe -Command \"C:\\cfn\\scripts\\Disable-AutoLogon.ps1\"",
+                            "g-signal-success": {
+                                "command": "powershell -Command \"Write-AWSQuickStartStatus\"",
                                 "waitAfterCompletion": "0"
                             }
                         }
@@ -2033,6 +2109,14 @@
                         "IpProtocol": "tcp",
                         "FromPort": "80",
                         "ToPort": "80",
+                        "CidrIp": {
+                            "Ref": "VPCCIDR"
+                        }
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "445",
+                        "ToPort": "445",
                         "CidrIp": {
                             "Ref": "VPCCIDR"
                         }

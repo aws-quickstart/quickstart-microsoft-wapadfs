@@ -3,9 +3,6 @@
     $DomainDNSName = "example.com",
 
     [string]
-    $DCName = "DC1",
-
-    [string]
     $DomainNetBIOSName = "example",
 
     [string]
@@ -23,17 +20,25 @@ try {
     $Pass = ConvertTo-SecureString $Password -AsPlainText -Force
     $Credential = New-Object System.Management.Automation.PSCredential -ArgumentList "$DomainNetBIOSName\$Username", $Pass
 
-    Import-PfxCertificate –FilePath "\\$DCName\CertEnroll\adfs.pfx" -CertStoreLocation cert:\localMachine\my -Password $Pass
-    $CertificateThumbprint = (dir Cert:\LocalMachine\My)[0].thumbprint
+    $WAPScriptBlock = {
+        $ErrorActionPreference = "Stop"
 
-    Install-WindowsFeature Web-Application-Proxy -IncludeManagementTools
+        Import-PfxCertificate –FilePath "\\ADFS1\cert\adfs.pfx" -CertStoreLocation cert:\localMachine\my -Password $Using:Pass
+        $CertificateThumbprint = (dir Cert:\LocalMachine\My)[0].thumbprint
 
-    while (-not (Resolve-DnsName -Name "sts.$DomainDNSName" -ErrorAction SilentlyContinue)) { Write-Verbose "Unable to resolve sts.$DomainDNSName. Waiting for 5 seconds before retrying."; Start-Sleep 5 }
+        Install-WindowsFeature Web-Application-Proxy -IncludeManagementTools
 
-    Install-WebApplicationProxy –CertificateThumbprint $CertificateThumbprint -FederationServiceName "sts.$DomainDNSName" -FederationServiceTrustCredential $Credential
+        while (-not (Resolve-DnsName -Name "sts.$Using:DomainDNSName" -ErrorAction SilentlyContinue)) { Write-Host "Unable to resolve sts.$Using:DomainDNSName. Waiting for 5 seconds before retrying."; Start-Sleep 5 }
 
-    Write-Verbose "Sending CFN Signal @ $(Get-Date)"
-    Write-AWSQuickStartStatus -Verbose
+        try {
+            Install-WebApplicationProxy –CertificateThumbprint $CertificateThumbprint -FederationServiceName "sts.$Using:DomainDNSName" -FederationServiceTrustCredential $Using:Credential
+        }
+        catch {
+            # Retry
+            Install-WebApplicationProxy –CertificateThumbprint $CertificateThumbprint -FederationServiceName "sts.$Using:DomainDNSName" -FederationServiceTrustCredential $Using:Credential
+        }
+    }
+    Invoke-Command -Authentication Credssp -Scriptblock $WAPScriptBlock -ComputerName $env:COMPUTERNAME -Credential $Credential
 }
 catch {
     Write-Verbose "$($_.exception.message)@ $(Get-Date)"

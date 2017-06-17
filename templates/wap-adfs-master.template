@@ -586,9 +586,6 @@
                     ]
                 },
                 "Parameters": {
-                    "ADServer1NetBIOSName": {
-                        "Ref": "ADServer1NetBIOSName"
-                    },
                     "DomainAdminPassword": {
                         "Ref": "DomainAdminPassword"
                     },
