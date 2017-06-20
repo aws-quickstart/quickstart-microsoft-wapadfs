@@ -101,7 +101,7 @@ try {
 
             function Get-CAs {
                 # Dump forest CAs from certutil
-                $certutilDump = certutil -dump -silent
+                $certutilDump = & certutil.exe -dump -silent
                 # Initialize array and entry
                 $CAs = @()
                 $entry = $null
