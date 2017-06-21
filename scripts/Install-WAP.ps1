@@ -30,12 +30,23 @@ try {
 
         while (-not (Resolve-DnsName -Name "sts.$Using:DomainDNSName" -ErrorAction SilentlyContinue)) { Write-Host "Unable to resolve sts.$Using:DomainDNSName. Waiting for 5 seconds before retrying."; Start-Sleep 5 }
 
-        try {
-            Install-WebApplicationProxy –CertificateThumbprint $CertificateThumbprint -FederationServiceName "sts.$Using:DomainDNSName" -FederationServiceTrustCredential $Using:Credential
-        }
-        catch {
-            # Retry
-            Install-WebApplicationProxy –CertificateThumbprint $CertificateThumbprint -FederationServiceName "sts.$Using:DomainDNSName" -FederationServiceTrustCredential $Using:Credential
+        $configured = $false
+        $tries = 0
+        do {
+            try {
+                Install-WebApplicationProxy –CertificateThumbprint $CertificateThumbprint -FederationServiceName "sts.$Using:DomainDNSName" -FederationServiceTrustCredential $Using:Credential
+                $configured = $true
+                break
+            }
+            catch {
+                $tries++
+                Write-Host "Configuration failed for Web Application Proxy. Exception:"
+                Write-Host $_
+                Start-Sleep -Seconds 60
+            }
+        } while ($tries -lt 5)
+        if (-not $configured) {
+            throw "WAP configuration failed even after multiple retries"
         }
     }
     Invoke-Command -Authentication Credssp -Scriptblock $WAPScriptBlock -ComputerName $env:COMPUTERNAME -Credential $Credential
