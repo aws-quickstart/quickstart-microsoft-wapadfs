@@ -100,6 +100,8 @@ try {
             }
 
             function Get-CAs {
+                [CmdletBinding()]
+                param()
                 # Dump forest CAs from certutil
                 $certutilDump = & certutil.exe -dump -silent
                 # Initialize array and entry
@@ -125,11 +127,15 @@ try {
             }
 
             function Get-ADDCs {
+                [CmdletBinding()]
+                param()
                 $domain = [System.DirectoryServices.ActiveDirectory.Domain]::GetComputerDomain()
                 return @($domain.FindAllDiscoverableDomainControllers())
             }
 
             function Sync-ADDomain {
+                [CmdletBinding()]
+                param()
                 $DCs = Get-ADDCs
                 foreach ($DC in $DCs) {
                     foreach ($partition in $DC.Partitions) {
@@ -179,7 +185,7 @@ try {
                 throw "Unable to create DNS record on any of the DNS servers $dnsServers"
             }
 
-            Sync-ADDomain
+            Sync-ADDomain -ErrorAction Continue
         }
         Invoke-Command -Authentication Credssp -Scriptblock $FirstServerScriptBlock -ComputerName $env:COMPUTERNAME -Credential $Credential
     }
