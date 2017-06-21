@@ -157,12 +157,12 @@ try {
 
             Install-WindowsFeature ADFS-Federation -IncludeManagementTools
             $CertificateThumbprint = (dir Cert:\LocalMachine\My)[0].thumbprint
-            Install-AdfsFarm -CertificateThumbprint $CertificateThumbprint -FederationServiceDisplayName ADFS -FederationServiceName "sts.$Using:DomainDNSName" -ServiceAccountCredential $Using:Credential
+            Install-AdfsFarm -CertificateThumbprint $CertificateThumbprint -FederationServiceDisplayName ADFS -FederationServiceName "sts.$Using:DomainDNSName" -ServiceAccountCredential $Using:Credential -OverwriteConfiguration
 
             Install-WindowsFeature RSAT-DNS-Server
             $netip = Get-NetIPConfiguration
             $ipconfig = Get-NetIPAddress | ?{$_.IpAddress -eq $netip.IPv4Address.IpAddress}
-            Add-DnsServerResourceRecordA -Name sts -ZoneName $Using:DomainDNSName -IPv4Address $ipconfig.IPAddress -Computername (Get-ADDCs)[0].Name
+            Add-DnsServerResourceRecordA -Name sts -ZoneName $Using:DomainDNSName -IPv4Address $ipconfig.IPAddress -Computername $(Get-ADDCs)[0].Name
 
             Sync-ADDomain
         }
@@ -180,7 +180,7 @@ try {
             while (-not (Resolve-DnsName -Name "adfs1.$Using:DomainDNSName" -ErrorAction SilentlyContinue)) { Write-Host "Unable to resolve adfs1.$Using:DomainDNSName. Waiting for 5 seconds before retrying."; Start-Sleep 5 }
 
             Install-WindowsFeature ADFS-Federation -IncludeManagementTools
-            Add-AdfsFarmNode -CertificateThumbprint $CertificateThumbprint -ServiceAccountCredential $Using:Credential -PrimaryComputerName "adfs1.$Using:DomainDNSName" -PrimaryComputerPort 80
+            Add-AdfsFarmNode -CertificateThumbprint $CertificateThumbprint -ServiceAccountCredential $Using:Credential -PrimaryComputerName "adfs1.$Using:DomainDNSName" -PrimaryComputerPort 80 -OverwriteConfiguration
         }
         Invoke-Command -Authentication Credssp -Scriptblock $ServerScriptBlock -ComputerName $env:COMPUTERNAME -Credential $Credential
     }
