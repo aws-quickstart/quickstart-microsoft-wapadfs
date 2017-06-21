@@ -126,7 +126,7 @@ try {
 
             function Get-ADDCs {
                 $domain = [System.DirectoryServices.ActiveDirectory.Domain]::GetComputerDomain()
-                return @($domain.DomainControllers)
+                return @($domain.FindAllDiscoverableDomainControllers())
             }
 
             function Sync-ADDomain {
@@ -162,7 +162,8 @@ try {
             Install-WindowsFeature RSAT-DNS-Server
             $netip = Get-NetIPConfiguration
             $ipconfig = Get-NetIPAddress | ?{$_.IpAddress -eq $netip.IPv4Address.IpAddress}
-            Add-DnsServerResourceRecordA -Name sts -ZoneName $Using:DomainDNSName -IPv4Address $ipconfig.IPAddress -Computername $(Get-ADDCs)[0].Name
+            $dnsServers = @((Resolve-DnsName $Using:DomainDNSName -Type NS).NameHost)
+            Add-DnsServerResourceRecordA -Name sts -ZoneName $Using:DomainDNSName -IPv4Address $ipconfig.IPAddress -Computername $dnsServers[0]
 
             Sync-ADDomain
         }
