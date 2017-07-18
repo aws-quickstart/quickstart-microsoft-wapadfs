@@ -401,89 +401,19 @@
         "WAP1EIP": {
             "Type": "AWS::EC2::EIP",
             "Properties": {
+                "InstanceId": {
+                    "Ref": "WAP1"
+                },
                 "Domain": "vpc"
             }
         },
         "WAP2EIP": {
             "Type": "AWS::EC2::EIP",
             "Properties": {
+                "InstanceId": {
+                    "Ref": "WAP2"
+                },
                 "Domain": "vpc"
-            }
-        },
-        "WAP1NetworkInterface": {
-            "Type": "AWS::EC2::NetworkInterface",
-            "Properties": {
-                "SubnetId": {
-                    "Ref": "PublicSubnet1ID"
-                },
-                "Description": "WAP1 network interface",
-                "GroupSet": [
-                    {
-                        "Ref": "WAPSecurityGroup"
-                    },
-                    {
-                        "Ref": "DomainMemberSGID"
-                    }
-                ],
-                "SourceDestCheck": "true",
-                "Tags": [
-                    {
-                        "Key": "Network",
-                        "Value": "WAP1NetworkInterface"
-                    }
-                ]
-            }
-        },
-        "WAP2NetworkInterface": {
-            "Type": "AWS::EC2::NetworkInterface",
-            "Properties": {
-                "SubnetId": {
-                    "Ref": "PublicSubnet2ID"
-                },
-                "Description": "WAP2 network interface",
-                "GroupSet": [
-                    {
-                        "Ref": "WAPSecurityGroup"
-                    },
-                    {
-                        "Ref": "DomainMemberSGID"
-                    }
-                ],
-                "SourceDestCheck": "true",
-                "Tags": [
-                    {
-                        "Key": "Network",
-                        "Value": "WAP2NetworkInterface"
-                    }
-                ]
-            }
-        },
-        "AssociateWAP1EIP": {
-            "Type": "AWS::EC2::EIPAssociation",
-            "Properties": {
-                "AllocationId": {
-                    "Fn::GetAtt": [
-                        "WAP1EIP",
-                        "AllocationId"
-                    ]
-                },
-                "NetworkInterfaceId": {
-                    "Ref": "WAP1NetworkInterface"
-                }
-            }
-        },
-        "AssociateWAP2EIP": {
-            "Type": "AWS::EC2::EIPAssociation",
-            "Properties": {
-                "AllocationId": {
-                    "Fn::GetAtt": [
-                        "WAP2EIP",
-                        "AllocationId"
-                    ]
-                },
-                "NetworkInterfaceId": {
-                    "Ref": "WAP2NetworkInterface"
-                }
             }
         },
         "WAP1": {
@@ -799,14 +729,17 @@
                 "InstanceType": {
                     "Ref": "WAPADFSInstanceType"
                 },
-                "NetworkInterfaces": [
+                "SecurityGroupIds": [
                     {
-                        "NetworkInterfaceId": {
-                            "Ref": "WAP1NetworkInterface"
-                        },
-                        "DeviceIndex": "0"
+                        "Ref": "WAPSecurityGroup"
+                    },
+                    {
+                        "Ref": "DomainMemberSGID"
                     }
                 ],
+                "SubnetId": {
+                    "Ref": "PublicSubnet1ID"
+                },
                 "Tags": [
                     {
                         "Key": "Name",
@@ -1165,14 +1098,17 @@
                 "InstanceType": {
                     "Ref": "WAPADFSInstanceType"
                 },
-                "NetworkInterfaces": [
+                "SecurityGroupIds": [
                     {
-                        "NetworkInterfaceId": {
-                            "Ref": "WAP2NetworkInterface"
-                        },
-                        "DeviceIndex": "0"
+                        "Ref": "WAPSecurityGroup"
+                    },
+                    {
+                        "Ref": "DomainMemberSGID"
                     }
                 ],
+                "SubnetId": {
+                    "Ref": "PublicSubnet2ID"
+                },
                 "Tags": [
                     {
                         "Key": "Name",
