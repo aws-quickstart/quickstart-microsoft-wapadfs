@@ -175,7 +175,6 @@ try {
                     Add-DnsServerResourceRecordA -Name sts -ZoneName $Using:DomainDNSName -IPv4Address $ipconfig.IPAddress -Computername $dnsServer
                     Write-Host "DNS record created on DNS server $dnsServer"
                     $recordCreated = $true
-                    break
                 }
                 catch {
                     Write-Host "Unable to create DNS record on DNS server $dnsServer"
