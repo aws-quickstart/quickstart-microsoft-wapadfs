@@ -140,7 +140,14 @@ try {
                 foreach ($DC in $DCs) {
                     foreach ($partition in $DC.Partitions) {
                         Write-Host "Forcing replication on $DC from all servers for partition $partition"
-                        $DC.SyncReplicaFromAllServers($partition, 'CrossSite')
+                        try {
+                            $DC.SyncReplicaFromAllServers($partition, 'CrossSite')
+                        }
+                        catch {
+                            Write-Host $_
+                            $foreach.Reset()
+                            continue
+                        }
                     }
                 }
             }
