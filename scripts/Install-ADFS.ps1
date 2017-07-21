@@ -176,19 +176,19 @@ try {
             $netip = Get-NetIPConfiguration
             $ipconfig = Get-NetIPAddress | ?{$_.IpAddress -eq $netip.IPv4Address.IpAddress}
             $dnsServers = @((Resolve-DnsName $Using:DomainDNSName -Type NS).NameHost)
-            $recordCreated = $false
             foreach ($dnsServer in $dnsServers) {
-                try {
-                    Add-DnsServerResourceRecordA -Name sts -ZoneName $Using:DomainDNSName -IPv4Address $ipconfig.IPAddress -Computername $dnsServer
-                    Write-Host "DNS record created on DNS server $dnsServer"
-                    $recordCreated = $true
-                }
-                catch {
-                    Write-Host "Unable to create DNS record on DNS server $dnsServer"
-                }
-            }
-            if (-not $recordCreated) {
-                throw "Unable to create DNS record on any of the DNS servers $dnsServers"
+                $recordCreated = $false
+                do {
+                    try {
+                        Add-DnsServerResourceRecordA -Name sts -ZoneName $Using:DomainDNSName -IPv4Address $ipconfig.IPAddress -Computername $dnsServer
+                        Write-Host "DNS record created on DNS server $dnsServer"
+                        $recordCreated = $true
+                    }
+                    catch {
+                        Write-Host "Unable to create DNS record on DNS server $dnsServer. Retrying in 5 seconds."
+                        Start-Sleep -Seconds 5
+                    }
+                } while (-not $recordCreated)
             }
 
             Sync-ADDomain -ErrorAction Continue
