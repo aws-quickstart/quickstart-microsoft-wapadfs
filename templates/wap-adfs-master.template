@@ -101,6 +101,9 @@
                 "KeyPairName": {
                     "default": "Key Pair Name"
                 },
+                "NumberOfRDGWHosts": {
+                    "default": "Number of RDGW Hosts"
+                },
                 "PrivateSubnet1CIDR": {
                     "default": "Private Subnet 1 CIDR"
                 },
