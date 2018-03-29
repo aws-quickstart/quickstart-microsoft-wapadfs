@@ -107,49 +107,49 @@
     "Mappings": {
         "AWSAMIRegionMap": {
             "AMI": {
-                "WS2012R2": "Windows_Server-2012-R2_RTM-English-64Bit-Base-2018.03.06"
+                "WS2012R2": "Windows_Server-2012-R2_RTM-English-64Bit-Base-2018.03.24"
             },
             "ap-northeast-1": {
-                "WS2012R2": "ami-08ffb26e"
+                "WS2012R2": "ami-3badff5d"
             },
             "ap-northeast-2": {
-                "WS2012R2": "ami-8e03aee0"
+                "WS2012R2": "ami-dde34cb3"
             },
             "ap-south-1": {
-                "WS2012R2": "ami-e9633d86"
+                "WS2012R2": "ami-d8b9e2b7"
             },
             "ap-southeast-1": {
-                "WS2012R2": "ami-5265312e"
+                "WS2012R2": "ami-169fc06a"
             },
             "ap-southeast-2": {
-                "WS2012R2": "ami-6169a803"
+                "WS2012R2": "ami-e68f4384"
             },
             "ca-central-1": {
-                "WS2012R2": "ami-284acd4c"
+                "WS2012R2": "ami-56fd7b32"
             },
             "eu-central-1": {
-                "WS2012R2": "ami-c10967ae"
+                "WS2012R2": "ami-0bdc8fe0"
             },
             "eu-west-1": {
-                "WS2012R2": "ami-31743748"
+                "WS2012R2": "ami-e9104190"
             },
             "eu-west-2": {
-                "WS2012R2": "ami-a7ee09c0"
+                "WS2012R2": "ami-19688e7e"
             },
             "sa-east-1": {
-                "WS2012R2": "ami-b61258da"
+                "WS2012R2": "ami-6ed38702"
             },
             "us-east-1": {
-                "WS2012R2": "ami-c951acb4"
+                "WS2012R2": "ami-eb1ecd96"
             },
             "us-east-2": {
-                "WS2012R2": "ami-387d4b5d"
+                "WS2012R2": "ami-2f16274a"
             },
             "us-west-1": {
-                "WS2012R2": "ami-04aea464"
+                "WS2012R2": "ami-4e07112e"
             },
             "us-west-2": {
-                "WS2012R2": "ami-ea950192"
+                "WS2012R2": "ami-651f811d"
             }
         }
     },
