@@ -76,10 +76,6 @@
         "ParameterValue": "t2.large"
     },
     {
-        "ParameterKey": "RestoreModePassword",
-        "ParameterValue": "$[taskcat_genpass_16]"
-    },
-    {
         "ParameterKey": "VPCCIDR",
         "ParameterValue": "10.0.0.0/16"
     },
