@@ -437,29 +437,17 @@
                     "KeyPairName": {
                         "Ref": "KeyPairName"
                     },
-                    "PrivateSubnet1CIDR": {
-                        "Ref": "PrivateSubnet1CIDR"
-                    },
                     "PrivateSubnet1ID": {
                         "Fn::GetAtt": [
                             "VPCStack",
                             "Outputs.PrivateSubnet1AID"
                         ]
                     },
-                    "PrivateSubnet2CIDR": {
-                        "Ref": "PrivateSubnet2CIDR"
-                    },
                     "PrivateSubnet2ID": {
                         "Fn::GetAtt": [
                             "VPCStack",
                             "Outputs.PrivateSubnet2AID"
                         ]
-                    },
-                    "PublicSubnet1CIDR": {
-                        "Ref": "PublicSubnet1CIDR"
-                    },
-                    "PublicSubnet2CIDR": {
-                        "Ref": "PublicSubnet2CIDR"
                     },
                     "QSS3BucketName": {
                         "Ref": "QSS3BucketName"
