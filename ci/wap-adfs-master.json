@@ -82,5 +82,9 @@
     {
         "ParameterKey": "WAPADFSInstanceType",
         "ParameterValue": "t2.large"
+    },
+    {
+        "ParameterKey": "QSS3BucketName",
+        "ParameterValue": "$[taskcat_autobucket]"
     }
 ]
