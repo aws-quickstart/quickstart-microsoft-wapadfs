@@ -1,2048 +1,1100 @@
-{
-    "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "This template deploys two Web Application Proxy servers into public subnets in each availability zone, as well as two ADFS servers into the private subnets in each availability zone. **WARNING** This template creates Amazon EC2 Windows instance and related resources. You will be billed for the AWS resources used if you create a stack from this template. QS(0012)",
-    "Metadata": {
-        "AWS::CloudFormation::Interface": {
-            "ParameterGroups": [
-                {
-                    "Label": {
-                        "default": "Network Configuration"
-                    },
-                    "Parameters": [
-                        "VPCCIDR",
-                        "VPCID",
-                        "PrivateSubnet1ID",
-                        "PrivateSubnet2ID",
-                        "PublicSubnet1ID",
-                        "PublicSubnet2ID"
-                    ]
-                },
-                {
-                    "Label": {
-                        "default": "Amazon EC2 Configuration"
-                    },
-                    "Parameters": [
-                        "KeyPairName",
-                        "WAPADFSInstanceType",
-                        "LatestAmiId"
-                    ]
-                },
-                {
-                    "Label": {
-                        "default": "Microsoft Active Directory Configuration"
-                    },
-                    "Parameters": [
-                        "DomainDNSName",
-                        "DomainNetBIOSName",
-                        "RestoreModePassword",
-                        "DomainAdminUser",
-                        "DomainAdminPassword",
-                        "DomainMemberSGID"
-                    ]
-                },
-                {
-                    "Label": {
-                        "default": "AWS Quick Start Configuration"
-                    },
-                    "Parameters": [
-                        "QSS3BucketName",
-                        "QSS3KeyPrefix"
-                    ]
-                }
-            ],
-            "ParameterLabels": {
-                "DomainAdminPassword": {
-                    "default": "Domain Admin Password"
-                },
-                "DomainAdminUser": {
-                    "default": "Domain Admin User Name"
-                },
-                "DomainDNSName": {
-                    "default": "Domain DNS Name"
-                },
-                "DomainMemberSGID": {
-                    "default": "Domain Member Security Group ID"
-                },
-                "DomainNetBIOSName": {
-                    "default": "Domain NetBIOS Name"
-                },
-                "KeyPairName": {
-                    "default": "Key Pair Name"
-                },
-                "PrivateSubnet1ID": {
-                    "default": "Private Subnet 1 ID"
-                },
-                "PrivateSubnet2ID": {
-                    "default": "Private Subnet 2 ID"
-                },
-                "PublicSubnet1ID": {
-                    "default": "Public Subnet 1 ID"
-                },
-                "PublicSubnet2ID": {
-                    "default": "Public Subnet 2 ID"
-                },
-                "LatestAmiId": {
-                    "default": "SSM Parameter to Grab Latest AMI ID"
-                },
-                "QSS3BucketName": {
-                    "default": "Quick Start S3 Bucket Name"
-                },
-                "QSS3KeyPrefix": {
-                    "default": "Quick Start S3 Key Prefix"
-                },
-                "VPCCIDR": {
-                    "default": "VPC CIDR"
-                },
-                "VPCID": {
-                    "default": "VPC ID"
-                },
-                "WAPADFSInstanceType": {
-                    "default": "WAP and ADFS Server Instance Type"
-                }
-            }
-        }
-    },
-    "Parameters": {
-        "DomainAdminPassword": {
-            "AllowedPattern": "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*",
-            "Description": "Password for the domain admin user. Must be at least 8 characters containing letters, numbers and symbols",
-            "MaxLength": "32",
-            "MinLength": "8",
-            "NoEcho": "true",
-            "Type": "String"
-        },
-        "DomainAdminUser": {
-            "AllowedPattern": "[a-zA-Z0-9]*",
-            "Default": "StackAdmin",
-            "Description": "User name for the account that will be added as Domain Administrator. This is separate from the default \"Administrator\" account",
-            "MaxLength": "25",
-            "MinLength": "5",
-            "Type": "String"
-        },
-        "DomainDNSName": {
-            "AllowedPattern": "[a-zA-Z0-9\\-]+\\..+",
-            "Default": "example.com",
-            "Description": "Fully qualified domain name (FQDN) of the forest root domain e.g. corp.example.com",
-            "MaxLength": "25",
-            "MinLength": "3",
-            "Type": "String"
-        },
-        "DomainMemberSGID": {
-            "Description": "ID of the Domain Member Security Group (e.g., sg-7f16e910)",
-            "Type": "AWS::EC2::SecurityGroup::Id"
-        },
-        "DomainNetBIOSName": {
-            "AllowedPattern": "[a-zA-Z0-9\\-]+",
-            "Default": "example",
-            "Description": "NetBIOS name of the domain (upto 15 characters) for users of earlier versions of Windows e.g. CORP",
-            "MaxLength": "15",
-            "MinLength": "1",
-            "Type": "String"
-        },
-        "KeyPairName": {
-            "Description": "Public/private key pairs allow you to securely connect to your instance after it launches",
-            "Type": "AWS::EC2::KeyPair::KeyName"
-        },
-        "LatestAmiId": {
-            "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
-            "Default": "/aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base"
-        },
-        "PrivateSubnet1ID": {
-            "Description": "ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)",
-            "Type": "AWS::EC2::Subnet::Id"
-        },
-        "PrivateSubnet2ID": {
-            "Description": "ID of the private subnet 2 in Availability Zone 2 (e.g., subnet-a0246dcd)",
-            "Type": "AWS::EC2::Subnet::Id"
-        },
-        "PublicSubnet1ID": {
-            "Description": "ID of the public subnet 1 in Availability Zone 1 (e.g., subnet-e3246d8e)",
-            "Type": "AWS::EC2::Subnet::Id"
-        },
-        "PublicSubnet2ID": {
-            "Description": "ID of the public subnet 2 in Availability Zone 2 (e.g., subnet-e3246d8e)",
-            "Type": "AWS::EC2::Subnet::Id"
-        },
-        "QSS3BucketName": {
-            "AllowedPattern": "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$",
-            "ConstraintDescription": "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
-            "Default": "aws-quickstart",
-            "Description": "S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
-            "Type": "String"
-        },
-        "QSS3KeyPrefix": {
-            "AllowedPattern": "^[0-9a-zA-Z-/]*$",
-            "ConstraintDescription": "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
-            "Default": "quickstart-microsoft-wapadfs/",
-            "Description": "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
-            "Type": "String"
-        },
-        "VPCCIDR": {
-            "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
-            "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
-            "Default": "10.0.0.0/16",
-            "Description": "CIDR Block used by the VPC",
-            "Type": "String"
-        },
-        "VPCID": {
-            "Description": "ID of the VPC (e.g., vpc-0343606e)",
-            "Type": "AWS::EC2::VPC::Id"
-        },
-        "WAPADFSInstanceType": {
-            "AllowedValues": [
-                "t2.large",
-                "c4.2xlarge"
-            ],
-            "Default": "c4.2xlarge",
-            "Description": "Amazon EC2 instance type for the WAP and ADFS Servers",
-            "Type": "String"
-        }
-    },
-    "Rules": {
-        "SubnetsInVPC": {
-            "Assertions": [
-                {
-                    "Assert": {
-                        "Fn::EachMemberIn": [
-                            {
-                                "Fn::ValueOfAll": [
-                                    "AWS::EC2::Subnet::Id",
-                                    "VpcId"
-                                ]
-                            },
-                            {
-                                "Fn::RefAll": "AWS::EC2::VPC::Id"
-                            }
-                        ]
-                    },
-                    "AssertDescription": "All subnets must in the VPC"
-                }
-            ]
-        }
-    },
-    "Mappings": {
-        "AWSAMIRegionMap": {
-            "AMI": {
-                "WS2012R2": "Windows_Server-2012-R2_RTM-English-64Bit-Base-2019.06.12"
-            },
-            "ap-northeast-1": {
-                "WS2012R2": "ami-0a7f0aeadc4d0fbfe"
-            },
-            "ap-northeast-2": {
-                "WS2012R2": "ami-053df08898d96e587"
-            },
-            "ap-south-1": {
-                "WS2012R2": "ami-0773dc0299ece2df6"
-            },
-            "ap-southeast-1": {
-                "WS2012R2": "ami-003bcb0466a4c1ee8"
-            },
-            "ap-southeast-2": {
-                "WS2012R2": "ami-061e7ecf5eb3633e2"
-            },
-            "ca-central-1": {
-                "WS2012R2": "ami-0c2b4ed63c22f1ea9"
-            },
-            "eu-central-1": {
-                "WS2012R2": "ami-09a023d2317d65420"
-            },
-            "eu-west-1": {
-                "WS2012R2": "ami-0c43411b5fd2c1129"
-            },
-            "eu-west-2": {
-                "WS2012R2": "ami-010ae2c4ae830c4dd"
-            },
-            "sa-east-1": {
-                "WS2012R2": "ami-041a00620190a86f9"
-            },
-            "us-east-1": {
-                "WS2012R2": "ami-05ad3e9ea4dcd9863"
-            },
-            "us-east-2": {
-                "WS2012R2": "ami-06d29c77f7ab40cf2"
-            },
-            "us-west-1": {
-                "WS2012R2": "ami-05c71b3ca4af2fbee"
-            },
-            "us-west-2": {
-                "WS2012R2": "ami-083ae6bd726521e4a"
-            }
-        }
-    },
-    "Conditions": {
-        "GovCloudCondition": {
-            "Fn::Equals": [
-                {
-                    "Ref": "AWS::Region"
-                },
-                "us-gov-west-1"
-            ]
-        }
-    },
-    "Resources": {
-        "WAPRole": {
-            "Type": "AWS::IAM::Role",
-            "Properties": {
-                "Policies": [
-                    {
-                        "PolicyDocument": {
-                            "Version": "2012-10-17",
-                            "Statement": [
-                                {
-                                    "Action": [
-                                        "s3:GetObject"
-                                    ],
-                                    "Resource": {
-                                        "Fn::Sub": [
-                                            "arn:${Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*",
-                                            {
-                                                "Partition": {
-                                                    "Fn::If": [
-                                                        "GovCloudCondition",
-                                                        "aws-us-gov",
-                                                        "aws"
-                                                    ]
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    "Effect": "Allow"
-                                }
-                            ]
-                        },
-                        "PolicyName": "aws-quick-start-s3-policy"
-                    }
-                ],
-                "Path": "/",
-                "AssumeRolePolicyDocument": {
-                    "Statement": [
-                        {
-                            "Action": [
-                                "sts:AssumeRole"
-                            ],
-                            "Principal": {
-                                "Service": [
-                                    "ec2.amazonaws.com"
-                                ]
-                            },
-                            "Effect": "Allow"
-                        }
-                    ],
-                    "Version": "2012-10-17"
-                }
-            }
-        },
-        "WAPProfile": {
-            "Type": "AWS::IAM::InstanceProfile",
-            "Properties": {
-                "Roles": [
-                    {
-                        "Ref": "WAPRole"
-                    }
-                ],
-                "Path": "/"
-            }
-        },
-        "ADFSRole": {
-            "Type": "AWS::IAM::Role",
-            "Properties": {
-                "Policies": [
-                    {
-                        "PolicyDocument": {
-                            "Version": "2012-10-17",
-                            "Statement": [
-                                {
-                                    "Action": [
-                                        "s3:GetObject"
-                                    ],
-                                    "Resource": {
-                                        "Fn::Sub": [
-                                            "arn:${Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*",
-                                            {
-                                                "Partition": {
-                                                    "Fn::If": [
-                                                        "GovCloudCondition",
-                                                        "aws-us-gov",
-                                                        "aws"
-                                                    ]
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    "Effect": "Allow"
-                                }
-                            ]
-                        },
-                        "PolicyName": "aws-quick-start-s3-policy"
-                    }
-                ],
-                "Path": "/",
-                "AssumeRolePolicyDocument": {
-                    "Statement": [
-                        {
-                            "Action": [
-                                "sts:AssumeRole"
-                            ],
-                            "Principal": {
-                                "Service": [
-                                    "ec2.amazonaws.com"
-                                ]
-                            },
-                            "Effect": "Allow"
-                        }
-                    ],
-                    "Version": "2012-10-17"
-                }
-            }
-        },
-        "ADFSProfile": {
-            "Type": "AWS::IAM::InstanceProfile",
-            "Properties": {
-                "Roles": [
-                    {
-                        "Ref": "ADFSRole"
-                    }
-                ],
-                "Path": "/"
-            }
-        },
-        "WAP1EIP": {
-            "Type": "AWS::EC2::EIP",
-            "Properties": {
-                "InstanceId": {
-                    "Ref": "WAP1"
-                },
-                "Domain": "vpc"
-            }
-        },
-        "WAP2EIP": {
-            "Type": "AWS::EC2::EIP",
-            "Properties": {
-                "InstanceId": {
-                    "Ref": "WAP2"
-                },
-                "Domain": "vpc"
-            }
-        },
-        "WAP1": {
-            "Type": "AWS::EC2::Instance",
-            "DependsOn": "ADFS1WaitCondition",
-            "Metadata": {
-                "AWS::CloudFormation::Authentication": {
-                    "S3AccessCreds": {
-                        "type": "S3",
-                        "roleName": {
-                            "Ref": "WAPRole"
-                        },
-                        "buckets": [
-                            {
-                                "Ref": "QSS3BucketName"
-                            }
-                        ]
-                    }
-                },
-                "AWS::CloudFormation::Init": {
-                    "configSets": {
-                        "config": [
-                            "setup",
-                            "prep"
-                        ]
-                    },
-                    "setup": {
-                        "files": {
-                            "C:\\cfn\\cfn-hup.conf": {
-                                "content": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "[main]\n",
-                                            "stack=",
-                                            {
-                                                "Ref": "AWS::StackId"
-                                            },
-                                            "\n",
-                                            "region=",
-                                            {
-                                                "Ref": "AWS::Region"
-                                            },
-                                            "\n"
-                                        ]
-                                    ]
-                                }
-                            },
-                            "C:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
-                                "content": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "[cfn-auto-reloader-hook]\n",
-                                            "triggers=post.update\n",
-                                            "path=Resources.WAP1.Metadata.AWS::CloudFormation::Init\n",
-                                            "action=cfn-init.exe -v -s ",
-                                            {
-                                                "Ref": "AWS::StackId"
-                                            },
-                                            " -r WAP1",
-                                            " --region ",
-                                            {
-                                                "Ref": "AWS::Region"
-                                            },
-                                            "\n"
-                                        ]
-                                    ]
-                                }
-                            },
-                            "C:\\cfn\\scripts\\Unzip-Archive.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\modules\\AWSQuickStart.zip": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Join-Domain.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Disable-CredSSP.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Enable-CredSSP.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Install-WAP.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}scripts/Install-WAP.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            }
-                        },
-                        "commands": {
-                            "a-set-execution-policy": {
-                                "command": "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
-                                "waitAfterCompletion": "0"
-                            },
-                            "b-unpack-quickstart-module": {
-                                "command": "powershell.exe -Command C:\\cfn\\scripts\\Unzip-Archive.ps1 -Source C:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
-                                "waitAfterCompletion": "0"
-                            },
-                            "c-init-quickstart-module": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"",
-                                            "New-AWSQuickStartWaitHandle -Handle '",
-                                            {
-                                                "Ref": "WAP1WaitHandle"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            }
-                        },
-                        "services": {
-                            "windows": {
-                                "cfn-hup": {
-                                    "enabled": "true",
-                                    "ensureRunning": "true",
-                                    "files": [
-                                        "C:\\cfn\\cfn-hup.conf",
-                                        "C:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "prep": {
-                        "commands": {
-                            "a-disable-win-fw": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            },
-                            "b-rename-computer": {
-                                "command": "powershell.exe -Command \"Rename-Computer -NewName 'WAP1' -Restart\"",
-                                "waitAfterCompletion": "forever"
-                            },
-                            "c-join-domain": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Join-Domain.ps1 -DomainName '",
-                                            {
-                                                "Ref": "DomainDNSName"
-                                            },
-                                            "' -UserName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "\\",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "forever"
-                            },
-                            "d-enable-credssp": {
-                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Enable-CredSSP.ps1",
-                                "waitAfterCompletion": "0"
-                            },
-                            "e-install-wap": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Install-WAP.ps1 -DomainDNSName '",
-                                            {
-                                                "Ref": "DomainDNSName"
-                                            },
-                                            "' -DomainNetBIOSName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "' -UserName '",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            },
-                            "f-disable-credssp": {
-                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Disable-CredSSP.ps1\"",
-                                "waitAfterCompletion": "0"
-                            },
-                            "g-signal-success": {
-                                "command": "powershell -Command \"Write-AWSQuickStartStatus\"",
-                                "waitAfterCompletion": "0"
-                            }
-                        }
-                    }
-                }
-            },
-            "Properties": {
-                "ImageId": {
-                    "Ref": "LatestAmiId"
-                },
-                "IamInstanceProfile": {
-                    "Ref": "WAPProfile"
-                },
-                "InstanceType": {
-                    "Ref": "WAPADFSInstanceType"
-                },
-                "SecurityGroupIds": [
-                    {
-                        "Ref": "WAPSecurityGroup"
-                    },
-                    {
-                        "Ref": "DomainMemberSGID"
-                    }
-                ],
-                "SubnetId": {
-                    "Ref": "PublicSubnet1ID"
-                },
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": "WAP1"
-                    }
-                ],
-                "BlockDeviceMappings": [
-                    {
-                        "DeviceName": "/dev/sda1",
-                        "Ebs": {
-                            "VolumeSize": "100",
-                            "VolumeType": "gp2"
-                        }
-                    },
-                    {
-                        "DeviceName": "/dev/xvdb",
-                        "VirtualName": "ephemeral0"
-                    }
-                ],
-                "KeyName": {
-                    "Ref": "KeyPairName"
-                },
-                "UserData": {
-                    "Fn::Base64": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                "<script>\n",
-                                "cfn-init.exe -v -c config -s ",
-                                {
-                                    "Ref": "AWS::StackId"
-                                },
-                                " -r WAP1 ",
-                                " --region ",
-                                {
-                                    "Ref": "AWS::Region"
-                                },
-                                "\n",
-                                "</script>"
-                            ]
-                        ]
-                    }
-                }
-            }
-        },
-        "WAP2": {
-            "Type": "AWS::EC2::Instance",
-            "DependsOn": "ADFS1WaitCondition",
-            "Metadata": {
-                "AWS::CloudFormation::Authentication": {
-                    "S3AccessCreds": {
-                        "type": "S3",
-                        "roleName": {
-                            "Ref": "WAPRole"
-                        },
-                        "buckets": [
-                            {
-                                "Ref": "QSS3BucketName"
-                            }
-                        ]
-                    }
-                },
-                "AWS::CloudFormation::Init": {
-                    "configSets": {
-                        "config": [
-                            "setup",
-                            "prep"
-                        ]
-                    },
-                    "setup": {
-                        "files": {
-                            "C:\\cfn\\cfn-hup.conf": {
-                                "content": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "[main]\n",
-                                            "stack=",
-                                            {
-                                                "Ref": "AWS::StackId"
-                                            },
-                                            "\n",
-                                            "region=",
-                                            {
-                                                "Ref": "AWS::Region"
-                                            },
-                                            "\n"
-                                        ]
-                                    ]
-                                }
-                            },
-                            "C:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
-                                "content": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "[cfn-auto-reloader-hook]\n",
-                                            "triggers=post.update\n",
-                                            "path=Resources.WAP2.Metadata.AWS::CloudFormation::Init\n",
-                                            "action=cfn-init.exe -v -s ",
-                                            {
-                                                "Ref": "AWS::StackId"
-                                            },
-                                            " -r WAP2",
-                                            " --region ",
-                                            {
-                                                "Ref": "AWS::Region"
-                                            },
-                                            "\n"
-                                        ]
-                                    ]
-                                }
-                            },
-                            "C:\\cfn\\scripts\\Unzip-Archive.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\modules\\AWSQuickStart.zip": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Join-Domain.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Disable-CredSSP.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Enable-CredSSP.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Install-WAP.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}scripts/Install-WAP.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            }
-                        },
-                        "commands": {
-                            "a-set-execution-policy": {
-                                "command": "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
-                                "waitAfterCompletion": "0"
-                            },
-                            "b-unpack-quickstart-module": {
-                                "command": "powershell.exe -Command C:\\cfn\\scripts\\Unzip-Archive.ps1 -Source C:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
-                                "waitAfterCompletion": "0"
-                            },
-                            "c-init-quickstart-module": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"",
-                                            "New-AWSQuickStartWaitHandle -Handle '",
-                                            {
-                                                "Ref": "WAP2WaitHandle"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            }
-                        },
-                        "services": {
-                            "windows": {
-                                "cfn-hup": {
-                                    "enabled": "true",
-                                    "ensureRunning": "true",
-                                    "files": [
-                                        "C:\\cfn\\cfn-hup.conf",
-                                        "C:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "prep": {
-                        "commands": {
-                            "a-disable-win-fw": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            },
-                            "b-rename-computer": {
-                                "command": "powershell.exe -Command \"Rename-Computer -NewName 'WAP2' -Restart\"",
-                                "waitAfterCompletion": "forever"
-                            },
-                            "c-join-domain": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Join-Domain.ps1 -DomainName '",
-                                            {
-                                                "Ref": "DomainDNSName"
-                                            },
-                                            "' -UserName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "\\",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "forever"
-                            },
-                            "d-enable-credssp": {
-                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Enable-CredSSP.ps1",
-                                "waitAfterCompletion": "0"
-                            },
-                            "e-install-wap": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Install-WAP.ps1 -DomainDNSName '",
-                                            {
-                                                "Ref": "DomainDNSName"
-                                            },
-                                            "' -DomainNetBIOSName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "' -UserName '",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            },
-                            "f-disable-credssp": {
-                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Disable-CredSSP.ps1\"",
-                                "waitAfterCompletion": "0"
-                            },
-                            "g-signal-success": {
-                                "command": "powershell -Command \"Write-AWSQuickStartStatus\"",
-                                "waitAfterCompletion": "0"
-                            }
-                        }
-                    }
-                }
-            },
-            "Properties": {
-                "ImageId": {
-                    "Ref": "LatestAmiId"
-                },
-                "IamInstanceProfile": {
-                    "Ref": "WAPProfile"
-                },
-                "InstanceType": {
-                    "Ref": "WAPADFSInstanceType"
-                },
-                "SecurityGroupIds": [
-                    {
-                        "Ref": "WAPSecurityGroup"
-                    },
-                    {
-                        "Ref": "DomainMemberSGID"
-                    }
-                ],
-                "SubnetId": {
-                    "Ref": "PublicSubnet2ID"
-                },
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": "WAP2"
-                    }
-                ],
-                "BlockDeviceMappings": [
-                    {
-                        "DeviceName": "/dev/sda1",
-                        "Ebs": {
-                            "VolumeSize": "100",
-                            "VolumeType": "gp2"
-                        }
-                    },
-                    {
-                        "DeviceName": "/dev/xvdb",
-                        "VirtualName": "ephemeral0"
-                    }
-                ],
-                "KeyName": {
-                    "Ref": "KeyPairName"
-                },
-                "UserData": {
-                    "Fn::Base64": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                "<script>\n",
-                                "cfn-init.exe -v -c config -s ",
-                                {
-                                    "Ref": "AWS::StackId"
-                                },
-                                " -r WAP2 ",
-                                " --region ",
-                                {
-                                    "Ref": "AWS::Region"
-                                },
-                                "\n",
-                                "</script>"
-                            ]
-                        ]
-                    }
-                }
-            }
-        },
-        "ADFS1": {
-            "Type": "AWS::EC2::Instance",
-            "Metadata": {
-                "AWS::CloudFormation::Authentication": {
-                    "S3AccessCreds": {
-                        "type": "S3",
-                        "roleName": {
-                            "Ref": "ADFSRole"
-                        },
-                        "buckets": [
-                            {
-                                "Ref": "QSS3BucketName"
-                            }
-                        ]
-                    }
-                },
-                "AWS::CloudFormation::Init": {
-                    "configSets": {
-                        "config": [
-                            "setup",
-                            "install"
-                        ]
-                    },
-                    "setup": {
-                        "files": {
-                            "C:\\cfn\\cfn-hup.conf": {
-                                "content": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "[main]\n",
-                                            "stack=",
-                                            {
-                                                "Ref": "AWS::StackId"
-                                            },
-                                            "\n",
-                                            "region=",
-                                            {
-                                                "Ref": "AWS::Region"
-                                            },
-                                            "\n"
-                                        ]
-                                    ]
-                                }
-                            },
-                            "C:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
-                                "content": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "[cfn-auto-reloader-hook]\n",
-                                            "triggers=post.update\n",
-                                            "path=Resources.ADFS1.Metadata.AWS::CloudFormation::Init\n",
-                                            "action=cfn-init.exe -v -s ",
-                                            {
-                                                "Ref": "AWS::StackId"
-                                            },
-                                            " -r ADFS1",
-                                            " --region ",
-                                            {
-                                                "Ref": "AWS::Region"
-                                            },
-                                            "\n"
-                                        ]
-                                    ]
-                                }
-                            },
-                            "C:\\cfn\\scripts\\Unzip-Archive.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\modules\\AWSQuickStart.zip": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Join-Domain.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Create-Share.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Create-Share.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Disable-CredSSP.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Enable-CredSSP.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Install-ADFS.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}scripts/Install-ADFS.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            }
-                        },
-                        "commands": {
-                            "a-set-execution-policy": {
-                                "command": "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
-                                "waitAfterCompletion": "0"
-                            },
-                            "b-unpack-quickstart-module": {
-                                "command": "powershell.exe -Command C:\\cfn\\scripts\\Unzip-Archive.ps1 -Source C:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
-                                "waitAfterCompletion": "0"
-                            },
-                            "c-init-quickstart-module": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"",
-                                            "New-AWSQuickStartWaitHandle -Handle '",
-                                            {
-                                                "Ref": "ADFS1WaitHandle"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            }
-                        },
-                        "services": {
-                            "windows": {
-                                "cfn-hup": {
-                                    "enabled": "true",
-                                    "ensureRunning": "true",
-                                    "files": [
-                                        "C:\\cfn\\cfn-hup.conf",
-                                        "C:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "install": {
-                        "commands": {
-                            "a-disable-win-fw": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            },
-                            "b-rename-computer": {
-                                "command": "powershell.exe -Command \"Rename-Computer -NewName 'ADFS1' -Restart\"",
-                                "waitAfterCompletion": "forever"
-                            },
-                            "c-join-domain": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Join-Domain.ps1 -DomainName '",
-                                            {
-                                                "Ref": "DomainDNSName"
-                                            },
-                                            "' -UserName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "\\",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "forever"
-                            },
-                            "d-create-cert-share": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Create-Share.ps1",
-                                            " -Path 'c:\\cert'",
-                                            " -ShareName 'cert'",
-                                            " -FolderPath 'c:\\'",
-                                            " -FolderName 'cert'",
-                                            " -DomainNetBIOSName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "' -DomainAdminUser '",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -DomainAdminPassword '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "' -FullAccessUser '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "\\",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            },
-                            "e-enable-credssp": {
-                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Enable-CredSSP.ps1",
-                                "waitAfterCompletion": "0"
-                            },
-                            "f-install-adfs": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Install-ADFS.ps1 -DomainDNSName '",
-                                            {
-                                                "Ref": "DomainDNSName"
-                                            },
-                                            "' -DomainNetBIOSName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "' -UserName '",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "' -FirstServer\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            },
-                            "g-disable-credssp": {
-                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Disable-CredSSP.ps1\"",
-                                "waitAfterCompletion": "0"
-                            },
-                            "h-signal-success": {
-                                "command": "powershell -Command \"Write-AWSQuickStartStatus\"",
-                                "waitAfterCompletion": "0"
-                            }
-                        }
-                    }
-                }
-            },
-            "Properties": {
-                "ImageId": {
-                    "Ref": "LatestAmiId"
-                },
-                "IamInstanceProfile": {
-                    "Ref": "ADFSProfile"
-                },
-                "InstanceType": {
-                    "Ref": "WAPADFSInstanceType"
-                },
-                "NetworkInterfaces": [
-                    {
-                        "DeleteOnTermination": "true",
-                        "DeviceIndex": 0,
-                        "SubnetId": {
-                            "Ref": "PrivateSubnet1ID"
-                        },
-                        "GroupSet": [
-                            {
-                                "Ref": "DomainMemberSGID"
-                            },
-                            {
-                                "Ref": "ADFSSecurityGroup"
-                            }
-                        ]
-                    }
-                ],
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": "ADFS1"
-                    }
-                ],
-                "BlockDeviceMappings": [
-                    {
-                        "DeviceName": "/dev/sda1",
-                        "Ebs": {
-                            "VolumeSize": "100",
-                            "VolumeType": "gp2"
-                        }
-                    },
-                    {
-                        "DeviceName": "/dev/xvdb",
-                        "VirtualName": "ephemeral0"
-                    }
-                ],
-                "KeyName": {
-                    "Ref": "KeyPairName"
-                },
-                "UserData": {
-                    "Fn::Base64": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                "<script>\n",
-                                "cfn-init.exe -v -c config -s ",
-                                {
-                                    "Ref": "AWS::StackId"
-                                },
-                                " -r ADFS1 ",
-                                " --region ",
-                                {
-                                    "Ref": "AWS::Region"
-                                },
-                                "\n",
-                                "</script>"
-                            ]
-                        ]
-                    }
-                }
-            }
-        },
-        "ADFS2": {
-            "Type": "AWS::EC2::Instance",
-            "DependsOn": "ADFS1WaitCondition",
-            "Metadata": {
-                "AWS::CloudFormation::Authentication": {
-                    "S3AccessCreds": {
-                        "type": "S3",
-                        "roleName": {
-                            "Ref": "ADFSRole"
-                        },
-                        "buckets": [
-                            {
-                                "Ref": "QSS3BucketName"
-                            }
-                        ]
-                    }
-                },
-                "AWS::CloudFormation::Init": {
-                    "configSets": {
-                        "config": [
-                            "setup",
-                            "install"
-                        ]
-                    },
-                    "setup": {
-                        "files": {
-                            "C:\\cfn\\cfn-hup.conf": {
-                                "content": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "[main]\n",
-                                            "stack=",
-                                            {
-                                                "Ref": "AWS::StackId"
-                                            },
-                                            "\n",
-                                            "region=",
-                                            {
-                                                "Ref": "AWS::Region"
-                                            },
-                                            "\n"
-                                        ]
-                                    ]
-                                }
-                            },
-                            "C:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
-                                "content": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "[cfn-auto-reloader-hook]\n",
-                                            "triggers=post.update\n",
-                                            "path=Resources.ADFS2.Metadata.AWS::CloudFormation::Init\n",
-                                            "action=cfn-init.exe -v -s ",
-                                            {
-                                                "Ref": "AWS::StackId"
-                                            },
-                                            " -r ADFS2",
-                                            " --region ",
-                                            {
-                                                "Ref": "AWS::Region"
-                                            },
-                                            "\n"
-                                        ]
-                                    ]
-                                }
-                            },
-                            "C:\\cfn\\scripts\\Unzip-Archive.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\modules\\AWSQuickStart.zip": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Join-Domain.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Disable-CredSSP.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Enable-CredSSP.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            },
-                            "C:\\cfn\\scripts\\Install-ADFS.ps1": {
-                                "source": {
-                                    "Fn::Sub": [
-                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}scripts/Install-ADFS.ps1",
-                                        {
-                                            "QSS3Region": {
-                                                "Fn::If": [
-                                                    "GovCloudCondition",
-                                                    "s3-us-gov-west-1",
-                                                    "s3"
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                },
-                                "authentication": "S3AccessCreds"
-                            }
-                        },
-                        "commands": {
-                            "a-set-execution-policy": {
-                                "command": "powershell.exe -Command \"Set-ExecutionPolicy RemoteSigned -Force\"",
-                                "waitAfterCompletion": "0"
-                            },
-                            "b-unpack-quickstart-module": {
-                                "command": "powershell.exe -Command C:\\cfn\\scripts\\Unzip-Archive.ps1 -Source C:\\cfn\\modules\\AWSQuickStart.zip -Destination C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\",
-                                "waitAfterCompletion": "0"
-                            },
-                            "c-init-quickstart-module": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"",
-                                            "New-AWSQuickStartWaitHandle -Handle '",
-                                            {
-                                                "Ref": "ADFS2WaitHandle"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            }
-                        },
-                        "services": {
-                            "windows": {
-                                "cfn-hup": {
-                                    "enabled": "true",
-                                    "ensureRunning": "true",
-                                    "files": [
-                                        "C:\\cfn\\cfn-hup.conf",
-                                        "C:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "install": {
-                        "commands": {
-                            "a-disable-win-fw": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"Get-NetFirewallProfile | Set-NetFirewallProfile -Enabled False\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            },
-                            "b-rename-computer": {
-                                "command": "powershell.exe -Command \"Rename-Computer -NewName 'ADFS2' -Restart\"",
-                                "waitAfterCompletion": "forever"
-                            },
-                            "c-join-domain": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Join-Domain.ps1 -DomainName '",
-                                            {
-                                                "Ref": "DomainDNSName"
-                                            },
-                                            "' -UserName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "\\",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "forever"
-                            },
-                            "d-enable-credssp": {
-                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Enable-CredSSP.ps1",
-                                "waitAfterCompletion": "0"
-                            },
-                            "e-install-adfs": {
-                                "command": {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "powershell.exe -Command \"C:\\cfn\\scripts\\Install-ADFS.ps1 -DomainDNSName '",
-                                            {
-                                                "Ref": "DomainDNSName"
-                                            },
-                                            "' -DomainNetBIOSName '",
-                                            {
-                                                "Ref": "DomainNetBIOSName"
-                                            },
-                                            "' -UserName '",
-                                            {
-                                                "Ref": "DomainAdminUser"
-                                            },
-                                            "' -Password '",
-                                            {
-                                                "Ref": "DomainAdminPassword"
-                                            },
-                                            "'\""
-                                        ]
-                                    ]
-                                },
-                                "waitAfterCompletion": "0"
-                            },
-                            "f-disable-credssp": {
-                                "command": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"C:\\cfn\\scripts\\Disable-CredSSP.ps1\"",
-                                "waitAfterCompletion": "0"
-                            },
-                            "g-signal-success": {
-                                "command": "powershell -Command \"Write-AWSQuickStartStatus\"",
-                                "waitAfterCompletion": "0"
-                            }
-                        }
-                    }
-                }
-            },
-            "Properties": {
-                "ImageId": {
-                    "Ref": "LatestAmiId"
-                },
-                "IamInstanceProfile": {
-                    "Ref": "ADFSProfile"
-                },
-                "InstanceType": {
-                    "Ref": "WAPADFSInstanceType"
-                },
-                "NetworkInterfaces": [
-                    {
-                        "DeleteOnTermination": "true",
-                        "DeviceIndex": 0,
-                        "SubnetId": {
-                            "Ref": "PrivateSubnet2ID"
-                        },
-                        "GroupSet": [
-                            {
-                                "Ref": "DomainMemberSGID"
-                            },
-                            {
-                                "Ref": "ADFSSecurityGroup"
-                            }
-                        ]
-                    }
-                ],
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": "ADFS2"
-                    }
-                ],
-                "BlockDeviceMappings": [
-                    {
-                        "DeviceName": "/dev/sda1",
-                        "Ebs": {
-                            "VolumeSize": "100",
-                            "VolumeType": "gp2"
-                        }
-                    },
-                    {
-                        "DeviceName": "/dev/xvdb",
-                        "VirtualName": "ephemeral0"
-                    }
-                ],
-                "KeyName": {
-                    "Ref": "KeyPairName"
-                },
-                "UserData": {
-                    "Fn::Base64": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                "<script>\n",
-                                "cfn-init.exe -v -c config -s ",
-                                {
-                                    "Ref": "AWS::StackId"
-                                },
-                                " -r ADFS2 ",
-                                " --region ",
-                                {
-                                    "Ref": "AWS::Region"
-                                },
-                                "\n",
-                                "</script>"
-                            ]
-                        ]
-                    }
-                }
-            }
-        },
-        "WAP1WaitCondition": {
-            "Type": "AWS::CloudFormation::WaitCondition",
-            "DependsOn": "WAP1",
-            "Properties": {
-                "Handle": {
-                    "Ref": "WAP1WaitHandle"
-                },
-                "Timeout": "3600"
-            }
-        },
-        "WAP1WaitHandle": {
-            "Type": "AWS::CloudFormation::WaitConditionHandle"
-        },
-        "WAP2WaitCondition": {
-            "Type": "AWS::CloudFormation::WaitCondition",
-            "DependsOn": "WAP2",
-            "Properties": {
-                "Handle": {
-                    "Ref": "WAP2WaitHandle"
-                },
-                "Timeout": "3600"
-            }
-        },
-        "WAP2WaitHandle": {
-            "Type": "AWS::CloudFormation::WaitConditionHandle"
-        },
-        "ADFS1WaitCondition": {
-            "Type": "AWS::CloudFormation::WaitCondition",
-            "DependsOn": "ADFS1",
-            "Properties": {
-                "Handle": {
-                    "Ref": "ADFS1WaitHandle"
-                },
-                "Timeout": "3600"
-            }
-        },
-        "ADFS1WaitHandle": {
-            "Type": "AWS::CloudFormation::WaitConditionHandle"
-        },
-        "ADFS2WaitCondition": {
-            "Type": "AWS::CloudFormation::WaitCondition",
-            "DependsOn": "ADFS2",
-            "Properties": {
-                "Handle": {
-                    "Ref": "ADFS2WaitHandle"
-                },
-                "Timeout": "3600"
-            }
-        },
-        "ADFS2WaitHandle": {
-            "Type": "AWS::CloudFormation::WaitConditionHandle"
-        },
-        "WAPSecurityGroup": {
-            "Type": "AWS::EC2::SecurityGroup",
-            "Properties": {
-                "GroupDescription": "Enable traffic to WAP Servers from the internet",
-                "VpcId": {
-                    "Ref": "VPCID"
-                },
-                "SecurityGroupIngress": [
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": "443",
-                        "ToPort": "443",
-                        "CidrIp": "0.0.0.0/0"
-                    }
-                ]
-            }
-        },
-        "ADFSSecurityGroup": {
-            "Type": "AWS::EC2::SecurityGroup",
-            "Properties": {
-                "GroupDescription": "Enable traffic to ADFS servers",
-                "VpcId": {
-                    "Ref": "VPCID"
-                },
-                "SecurityGroupIngress": [
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": "443",
-                        "ToPort": "443",
-                        "CidrIp": {
-                            "Ref": "VPCCIDR"
-                        }
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": "80",
-                        "ToPort": "80",
-                        "CidrIp": {
-                            "Ref": "VPCCIDR"
-                        }
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": "445",
-                        "ToPort": "445",
-                        "CidrIp": {
-                            "Ref": "VPCCIDR"
-                        }
-                    }
-                ]
-            }
-        }
-    }
-}
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  This template deploys two Web Application Proxy servers into public subnets in each
+  availability zone, as well as two ADFS servers into the private subnets in each
+  availability zone. **WARNING** This template creates Amazon EC2 Windows instance
+  and related resources. You will be billed for the AWS resources used if you create
+  a stack from this template. QS(0012)
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network Configuration
+        Parameters:
+          - VPCCIDR
+          - VPCID
+          - PrivateSubnet1ID
+          - PrivateSubnet2ID
+          - PublicSubnet1ID
+          - PublicSubnet2ID
+      - Label:
+          default: Amazon EC2 Configuration
+        Parameters:
+          - KeyPairName
+          - WAPADFSInstanceType
+          - LatestAmiId
+      - Label:
+          default: Microsoft Active Directory Configuration
+        Parameters:
+          - DomainDNSName
+          - DomainNetBIOSName
+          - DomainAdminUser
+          - DomainAdminPassword
+          - DomainMemberSGID
+      - Label:
+          default: AWS Quick Start Configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+    ParameterLabels:
+      DomainAdminPassword:
+        default: Domain Admin Password
+      DomainAdminUser:
+        default: Domain Admin User Name
+      DomainDNSName:
+        default: Domain DNS Name
+      DomainMemberSGID:
+        default: Domain Member Security Group ID
+      DomainNetBIOSName:
+        default: Domain NetBIOS Name
+      KeyPairName:
+        default: Key Pair Name
+      PrivateSubnet1ID:
+        default: Private Subnet 1 ID
+      PrivateSubnet2ID:
+        default: Private Subnet 2 ID
+      PublicSubnet1ID:
+        default: Public Subnet 1 ID
+      PublicSubnet2ID:
+        default: Public Subnet 2 ID
+      LatestAmiId:
+        default: SSM Parameter to Grab Latest AMI ID
+      QSS3BucketName:
+        default: Quick Start S3 Bucket Name
+      QSS3KeyPrefix:
+        default: Quick Start S3 Key Prefix
+      VPCCIDR:
+        default: VPC CIDR
+      VPCID:
+        default: VPC ID
+      WAPADFSInstanceType:
+        default: WAP and ADFS Server Instance Type
+Parameters:
+  DomainAdminPassword:
+    AllowedPattern: (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
+    Description: Password for the domain admin user. Must be at least 8 characters
+      containing letters, numbers and symbols
+    MaxLength: '32'
+    MinLength: '8'
+    NoEcho: 'true'
+    Type: String
+  DomainAdminUser:
+    AllowedPattern: '[a-zA-Z0-9]*'
+    Default: StackAdmin
+    Description: User name for the account that will be added as Domain Administrator.
+      This is separate from the default "Administrator" account
+    MaxLength: '25'
+    MinLength: '5'
+    Type: String
+  DomainDNSName:
+    AllowedPattern: '[a-zA-Z0-9\-]+\..+'
+    Default: example.com
+    Description: Fully qualified domain name (FQDN) of the forest root domain e.g.
+      corp.example.com
+    MaxLength: '25'
+    MinLength: '3'
+    Type: String
+  DomainMemberSGID:
+    Description: ID of the Domain Member Security Group (e.g., sg-7f16e910)
+    Type: AWS::EC2::SecurityGroup::Id
+  DomainNetBIOSName:
+    AllowedPattern: '[a-zA-Z0-9\-]+'
+    Default: example
+    Description: NetBIOS name of the domain (upto 15 characters) for users of earlier
+      versions of Windows e.g. CORP
+    MaxLength: '15'
+    MinLength: '1'
+    Type: String
+  KeyPairName:
+    Description: Public/private key pairs allow you to securely connect to your instance
+      after it launches
+    Type: AWS::EC2::KeyPair::KeyName
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
+  PrivateSubnet1ID:
+    Description: ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet2ID:
+    Description: ID of the private subnet 2 in Availability Zone 2 (e.g., subnet-a0246dcd)
+    Type: AWS::EC2::Subnet::Id
+  PublicSubnet1ID:
+    Description: ID of the public subnet 1 in Availability Zone 1 (e.g., subnet-e3246d8e)
+    Type: AWS::EC2::Subnet::Id
+  PublicSubnet2ID:
+    Description: ID of the public subnet 2 in Availability Zone 2 (e.g., subnet-e3246d8e)
+    Type: AWS::EC2::Subnet::Id
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/).
+    Default: quickstart-microsoft-wapadfs/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
+      forward slash (/).
+    Type: String
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/16
+    Description: CIDR Block used by the VPC
+    Type: String
+  VPCID:
+    Description: ID of the VPC (e.g., vpc-0343606e)
+    Type: AWS::EC2::VPC::Id
+  WAPADFSInstanceType:
+    AllowedValues:
+      - t2.large
+      - c4.2xlarge
+    Default: c4.2xlarge
+    Description: Amazon EC2 instance type for the WAP and ADFS Servers
+    Type: String
+Rules:
+  SubnetsInVPC:
+    Assertions:
+      - Assert: !EachMemberIn
+          - !ValueOfAll
+            - AWS::EC2::Subnet::Id
+            - VpcId
+          - !RefAll 'AWS::EC2::VPC::Id'
+        AssertDescription: All subnets must in the VPC
+Conditions:
+  GovCloudCondition: !Equals
+    - !Ref 'AWS::Region'
+    - us-gov-west-1
+Resources:
+  WAPRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Policies:
+        - PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - s3:GetObject
+                Resource: !Sub
+                  - arn:${Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*
+                  - Partition: !If
+                      - GovCloudCondition
+                      - aws-us-gov
+                      - aws
+                Effect: Allow
+          PolicyName: aws-quick-start-s3-policy
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Effect: Allow
+        Version: '2012-10-17'
+  WAPProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref 'WAPRole'
+      Path: /
+  ADFSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Policies:
+        - PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - s3:GetObject
+                Resource: !Sub
+                  - arn:${Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*
+                  - Partition: !If
+                      - GovCloudCondition
+                      - aws-us-gov
+                      - aws
+                Effect: Allow
+          PolicyName: aws-quick-start-s3-policy
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Effect: Allow
+        Version: '2012-10-17'
+  ADFSProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref 'ADFSRole'
+      Path: /
+  WAP1EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref 'WAP1'
+      Domain: vpc
+  WAP2EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref 'WAP2'
+      Domain: vpc
+  WAP1:
+    Type: AWS::EC2::Instance
+    DependsOn: ADFS1WaitCondition
+    Metadata:
+      AWS::CloudFormation::Authentication:
+        S3AccessCreds:
+          type: S3
+          roleName: !Ref 'WAPRole'
+          buckets:
+            - !Ref 'QSS3BucketName'
+      AWS::CloudFormation::Init:
+        configSets:
+          config:
+            - setup
+            - prep
+        setup:
+          files:
+            C:\cfn\cfn-hup.conf:
+              content: !Join
+                - ''
+                - - "[main]\n"
+                  - stack=
+                  - !Ref 'AWS::StackId'
+                  - "\n"
+                  - region=
+                  - !Ref 'AWS::Region'
+                  - "\n"
+            C:\cfn\hooks.d\cfn-auto-reloader.conf:
+              content: !Join
+                - ''
+                - - "[cfn-auto-reloader-hook]\n"
+                  - "triggers=post.update\n"
+                  - "path=Resources.WAP1.Metadata.AWS::CloudFormation::Init\n"
+                  - 'action=cfn-init.exe -v -s '
+                  - !Ref 'AWS::StackId'
+                  - ' -r WAP1'
+                  - ' --region '
+                  - !Ref 'AWS::Region'
+                  - "\n"
+            C:\cfn\scripts\Unzip-Archive.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\modules\AWSQuickStart.zip:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Join-Domain.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Disable-CredSSP.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Enable-CredSSP.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Install-WAP.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}scripts/Install-WAP.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+          commands:
+            a-set-execution-policy:
+              command: powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"
+              waitAfterCompletion: '0'
+            b-unpack-quickstart-module:
+              command: powershell.exe -Command C:\cfn\scripts\Unzip-Archive.ps1 -Source
+                C:\cfn\modules\AWSQuickStart.zip -Destination C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
+              waitAfterCompletion: '0'
+            c-init-quickstart-module:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "
+                  - New-AWSQuickStartWaitHandle -Handle '
+                  - !Ref 'WAP1WaitHandle'
+                  - '''"'
+              waitAfterCompletion: '0'
+          services:
+            windows:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - C:\cfn\cfn-hup.conf
+                  - C:\cfn\hooks.d\cfn-auto-reloader.conf
+        prep:
+          commands:
+            a-disable-win-fw:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "Get-NetFirewallProfile | Set-NetFirewallProfile
+                    -Enabled False"
+              waitAfterCompletion: '0'
+            b-rename-computer:
+              command: powershell.exe -Command "Rename-Computer -NewName 'WAP1' -Restart"
+              waitAfterCompletion: forever
+            c-join-domain:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "C:\cfn\scripts\Join-Domain.ps1 -DomainName
+                    '
+                  - !Ref 'DomainDNSName'
+                  - ''' -UserName '''
+                  - !Ref 'DomainNetBIOSName'
+                  - \
+                  - !Ref 'DomainAdminUser'
+                  - ''' -Password '''
+                  - !Ref 'DomainAdminPassword'
+                  - '''"'
+              waitAfterCompletion: forever
+            d-enable-credssp:
+              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Enable-CredSSP.ps1
+              waitAfterCompletion: '0'
+            e-install-wap:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "C:\cfn\scripts\Install-WAP.ps1 -DomainDNSName
+                    '
+                  - !Ref 'DomainDNSName'
+                  - ''' -DomainNetBIOSName '''
+                  - !Ref 'DomainNetBIOSName'
+                  - ''' -UserName '''
+                  - !Ref 'DomainAdminUser'
+                  - ''' -Password '''
+                  - !Ref 'DomainAdminPassword'
+                  - '''"'
+              waitAfterCompletion: '0'
+            f-disable-credssp:
+              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Disable-CredSSP.ps1"
+              waitAfterCompletion: '0'
+            g-signal-success:
+              command: powershell -Command "Write-AWSQuickStartStatus"
+              waitAfterCompletion: '0'
+    Properties:
+      ImageId: !Ref 'LatestAmiId'
+      IamInstanceProfile: !Ref 'WAPProfile'
+      InstanceType: !Ref 'WAPADFSInstanceType'
+      SecurityGroupIds:
+        - !Ref 'WAPSecurityGroup'
+        - !Ref 'DomainMemberSGID'
+      SubnetId: !Ref 'PublicSubnet1ID'
+      Tags:
+        - Key: Name
+          Value: WAP1
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: '100'
+            VolumeType: gp2
+        - DeviceName: /dev/xvdb
+          VirtualName: ephemeral0
+      KeyName: !Ref 'KeyPairName'
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<script>\n"
+            - 'cfn-init.exe -v -c config -s '
+            - !Ref 'AWS::StackId'
+            - ' -r WAP1 '
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - "\n"
+            - </script>
+  WAP2:
+    Type: AWS::EC2::Instance
+    DependsOn: ADFS1WaitCondition
+    Metadata:
+      AWS::CloudFormation::Authentication:
+        S3AccessCreds:
+          type: S3
+          roleName: !Ref 'WAPRole'
+          buckets:
+            - !Ref 'QSS3BucketName'
+      AWS::CloudFormation::Init:
+        configSets:
+          config:
+            - setup
+            - prep
+        setup:
+          files:
+            C:\cfn\cfn-hup.conf:
+              content: !Join
+                - ''
+                - - "[main]\n"
+                  - stack=
+                  - !Ref 'AWS::StackId'
+                  - "\n"
+                  - region=
+                  - !Ref 'AWS::Region'
+                  - "\n"
+            C:\cfn\hooks.d\cfn-auto-reloader.conf:
+              content: !Join
+                - ''
+                - - "[cfn-auto-reloader-hook]\n"
+                  - "triggers=post.update\n"
+                  - "path=Resources.WAP2.Metadata.AWS::CloudFormation::Init\n"
+                  - 'action=cfn-init.exe -v -s '
+                  - !Ref 'AWS::StackId'
+                  - ' -r WAP2'
+                  - ' --region '
+                  - !Ref 'AWS::Region'
+                  - "\n"
+            C:\cfn\scripts\Unzip-Archive.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\modules\AWSQuickStart.zip:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Join-Domain.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Disable-CredSSP.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Enable-CredSSP.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Install-WAP.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}scripts/Install-WAP.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+          commands:
+            a-set-execution-policy:
+              command: powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"
+              waitAfterCompletion: '0'
+            b-unpack-quickstart-module:
+              command: powershell.exe -Command C:\cfn\scripts\Unzip-Archive.ps1 -Source
+                C:\cfn\modules\AWSQuickStart.zip -Destination C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
+              waitAfterCompletion: '0'
+            c-init-quickstart-module:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "
+                  - New-AWSQuickStartWaitHandle -Handle '
+                  - !Ref 'WAP2WaitHandle'
+                  - '''"'
+              waitAfterCompletion: '0'
+          services:
+            windows:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - C:\cfn\cfn-hup.conf
+                  - C:\cfn\hooks.d\cfn-auto-reloader.conf
+        prep:
+          commands:
+            a-disable-win-fw:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "Get-NetFirewallProfile | Set-NetFirewallProfile
+                    -Enabled False"
+              waitAfterCompletion: '0'
+            b-rename-computer:
+              command: powershell.exe -Command "Rename-Computer -NewName 'WAP2' -Restart"
+              waitAfterCompletion: forever
+            c-join-domain:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "C:\cfn\scripts\Join-Domain.ps1 -DomainName
+                    '
+                  - !Ref 'DomainDNSName'
+                  - ''' -UserName '''
+                  - !Ref 'DomainNetBIOSName'
+                  - \
+                  - !Ref 'DomainAdminUser'
+                  - ''' -Password '''
+                  - !Ref 'DomainAdminPassword'
+                  - '''"'
+              waitAfterCompletion: forever
+            d-enable-credssp:
+              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Enable-CredSSP.ps1
+              waitAfterCompletion: '0'
+            e-install-wap:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "C:\cfn\scripts\Install-WAP.ps1 -DomainDNSName
+                    '
+                  - !Ref 'DomainDNSName'
+                  - ''' -DomainNetBIOSName '''
+                  - !Ref 'DomainNetBIOSName'
+                  - ''' -UserName '''
+                  - !Ref 'DomainAdminUser'
+                  - ''' -Password '''
+                  - !Ref 'DomainAdminPassword'
+                  - '''"'
+              waitAfterCompletion: '0'
+            f-disable-credssp:
+              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Disable-CredSSP.ps1"
+              waitAfterCompletion: '0'
+            g-signal-success:
+              command: powershell -Command "Write-AWSQuickStartStatus"
+              waitAfterCompletion: '0'
+    Properties:
+      ImageId: !Ref 'LatestAmiId'
+      IamInstanceProfile: !Ref 'WAPProfile'
+      InstanceType: !Ref 'WAPADFSInstanceType'
+      SecurityGroupIds:
+        - !Ref 'WAPSecurityGroup'
+        - !Ref 'DomainMemberSGID'
+      SubnetId: !Ref 'PublicSubnet2ID'
+      Tags:
+        - Key: Name
+          Value: WAP2
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: '100'
+            VolumeType: gp2
+        - DeviceName: /dev/xvdb
+          VirtualName: ephemeral0
+      KeyName: !Ref 'KeyPairName'
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<script>\n"
+            - 'cfn-init.exe -v -c config -s '
+            - !Ref 'AWS::StackId'
+            - ' -r WAP2 '
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - "\n"
+            - </script>
+  ADFS1:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Authentication:
+        S3AccessCreds:
+          type: S3
+          roleName: !Ref 'ADFSRole'
+          buckets:
+            - !Ref 'QSS3BucketName'
+      AWS::CloudFormation::Init:
+        configSets:
+          config:
+            - setup
+            - install
+        setup:
+          files:
+            C:\cfn\cfn-hup.conf:
+              content: !Join
+                - ''
+                - - "[main]\n"
+                  - stack=
+                  - !Ref 'AWS::StackId'
+                  - "\n"
+                  - region=
+                  - !Ref 'AWS::Region'
+                  - "\n"
+            C:\cfn\hooks.d\cfn-auto-reloader.conf:
+              content: !Join
+                - ''
+                - - "[cfn-auto-reloader-hook]\n"
+                  - "triggers=post.update\n"
+                  - "path=Resources.ADFS1.Metadata.AWS::CloudFormation::Init\n"
+                  - 'action=cfn-init.exe -v -s '
+                  - !Ref 'AWS::StackId'
+                  - ' -r ADFS1'
+                  - ' --region '
+                  - !Ref 'AWS::Region'
+                  - "\n"
+            C:\cfn\scripts\Unzip-Archive.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\modules\AWSQuickStart.zip:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Join-Domain.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Create-Share.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Create-Share.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Disable-CredSSP.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Enable-CredSSP.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Install-ADFS.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}scripts/Install-ADFS.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+          commands:
+            a-set-execution-policy:
+              command: powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"
+              waitAfterCompletion: '0'
+            b-unpack-quickstart-module:
+              command: powershell.exe -Command C:\cfn\scripts\Unzip-Archive.ps1 -Source
+                C:\cfn\modules\AWSQuickStart.zip -Destination C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
+              waitAfterCompletion: '0'
+            c-init-quickstart-module:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "
+                  - New-AWSQuickStartWaitHandle -Handle '
+                  - !Ref 'ADFS1WaitHandle'
+                  - '''"'
+              waitAfterCompletion: '0'
+          services:
+            windows:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - C:\cfn\cfn-hup.conf
+                  - C:\cfn\hooks.d\cfn-auto-reloader.conf
+        install:
+          commands:
+            a-disable-win-fw:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "Get-NetFirewallProfile | Set-NetFirewallProfile
+                    -Enabled False"
+              waitAfterCompletion: '0'
+            b-rename-computer:
+              command: powershell.exe -Command "Rename-Computer -NewName 'ADFS1' -Restart"
+              waitAfterCompletion: forever
+            c-join-domain:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "C:\cfn\scripts\Join-Domain.ps1 -DomainName
+                    '
+                  - !Ref 'DomainDNSName'
+                  - ''' -UserName '''
+                  - !Ref 'DomainNetBIOSName'
+                  - \
+                  - !Ref 'DomainAdminUser'
+                  - ''' -Password '''
+                  - !Ref 'DomainAdminPassword'
+                  - '''"'
+              waitAfterCompletion: forever
+            d-create-cert-share:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "C:\cfn\scripts\Create-Share.ps1
+                  - ' -Path ''c:\cert'''
+                  - ' -ShareName ''cert'''
+                  - ' -FolderPath ''c:\'''
+                  - ' -FolderName ''cert'''
+                  - ' -DomainNetBIOSName '''
+                  - !Ref 'DomainNetBIOSName'
+                  - ''' -DomainAdminUser '''
+                  - !Ref 'DomainAdminUser'
+                  - ''' -DomainAdminPassword '''
+                  - !Ref 'DomainAdminPassword'
+                  - ''' -FullAccessUser '''
+                  - !Ref 'DomainNetBIOSName'
+                  - \
+                  - !Ref 'DomainAdminUser'
+                  - '''"'
+              waitAfterCompletion: '0'
+            e-enable-credssp:
+              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Enable-CredSSP.ps1
+              waitAfterCompletion: '0'
+            f-install-adfs:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "C:\cfn\scripts\Install-ADFS.ps1 -DomainDNSName
+                    '
+                  - !Ref 'DomainDNSName'
+                  - ''' -DomainNetBIOSName '''
+                  - !Ref 'DomainNetBIOSName'
+                  - ''' -UserName '''
+                  - !Ref 'DomainAdminUser'
+                  - ''' -Password '''
+                  - !Ref 'DomainAdminPassword'
+                  - ''' -FirstServer"'
+              waitAfterCompletion: '0'
+            g-disable-credssp:
+              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Disable-CredSSP.ps1"
+              waitAfterCompletion: '0'
+            h-signal-success:
+              command: powershell -Command "Write-AWSQuickStartStatus"
+              waitAfterCompletion: '0'
+    Properties:
+      ImageId: !Ref 'LatestAmiId'
+      IamInstanceProfile: !Ref 'ADFSProfile'
+      InstanceType: !Ref 'WAPADFSInstanceType'
+      NetworkInterfaces:
+        - DeleteOnTermination: 'true'
+          DeviceIndex: 0
+          SubnetId: !Ref 'PrivateSubnet1ID'
+          GroupSet:
+            - !Ref 'DomainMemberSGID'
+            - !Ref 'ADFSSecurityGroup'
+      Tags:
+        - Key: Name
+          Value: ADFS1
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: '100'
+            VolumeType: gp2
+        - DeviceName: /dev/xvdb
+          VirtualName: ephemeral0
+      KeyName: !Ref 'KeyPairName'
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<script>\n"
+            - 'cfn-init.exe -v -c config -s '
+            - !Ref 'AWS::StackId'
+            - ' -r ADFS1 '
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - "\n"
+            - </script>
+  ADFS2:
+    Type: AWS::EC2::Instance
+    DependsOn: ADFS1WaitCondition
+    Metadata:
+      AWS::CloudFormation::Authentication:
+        S3AccessCreds:
+          type: S3
+          roleName: !Ref 'ADFSRole'
+          buckets:
+            - !Ref 'QSS3BucketName'
+      AWS::CloudFormation::Init:
+        configSets:
+          config:
+            - setup
+            - install
+        setup:
+          files:
+            C:\cfn\cfn-hup.conf:
+              content: !Join
+                - ''
+                - - "[main]\n"
+                  - stack=
+                  - !Ref 'AWS::StackId'
+                  - "\n"
+                  - region=
+                  - !Ref 'AWS::Region'
+                  - "\n"
+            C:\cfn\hooks.d\cfn-auto-reloader.conf:
+              content: !Join
+                - ''
+                - - "[cfn-auto-reloader-hook]\n"
+                  - "triggers=post.update\n"
+                  - "path=Resources.ADFS2.Metadata.AWS::CloudFormation::Init\n"
+                  - 'action=cfn-init.exe -v -s '
+                  - !Ref 'AWS::StackId'
+                  - ' -r ADFS2'
+                  - ' --region '
+                  - !Ref 'AWS::Region'
+                  - "\n"
+            C:\cfn\scripts\Unzip-Archive.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\modules\AWSQuickStart.zip:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Join-Domain.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Disable-CredSSP.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Enable-CredSSP.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Install-ADFS.ps1:
+              source: !Sub
+                - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}scripts/Install-ADFS.ps1
+                - QSS3Region: !If
+                    - GovCloudCondition
+                    - s3-us-gov-west-1
+                    - s3
+              authentication: S3AccessCreds
+          commands:
+            a-set-execution-policy:
+              command: powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"
+              waitAfterCompletion: '0'
+            b-unpack-quickstart-module:
+              command: powershell.exe -Command C:\cfn\scripts\Unzip-Archive.ps1 -Source
+                C:\cfn\modules\AWSQuickStart.zip -Destination C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
+              waitAfterCompletion: '0'
+            c-init-quickstart-module:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "
+                  - New-AWSQuickStartWaitHandle -Handle '
+                  - !Ref 'ADFS2WaitHandle'
+                  - '''"'
+              waitAfterCompletion: '0'
+          services:
+            windows:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - C:\cfn\cfn-hup.conf
+                  - C:\cfn\hooks.d\cfn-auto-reloader.conf
+        install:
+          commands:
+            a-disable-win-fw:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "Get-NetFirewallProfile | Set-NetFirewallProfile
+                    -Enabled False"
+              waitAfterCompletion: '0'
+            b-rename-computer:
+              command: powershell.exe -Command "Rename-Computer -NewName 'ADFS2' -Restart"
+              waitAfterCompletion: forever
+            c-join-domain:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "C:\cfn\scripts\Join-Domain.ps1 -DomainName
+                    '
+                  - !Ref 'DomainDNSName'
+                  - ''' -UserName '''
+                  - !Ref 'DomainNetBIOSName'
+                  - \
+                  - !Ref 'DomainAdminUser'
+                  - ''' -Password '''
+                  - !Ref 'DomainAdminPassword'
+                  - '''"'
+              waitAfterCompletion: forever
+            d-enable-credssp:
+              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Enable-CredSSP.ps1
+              waitAfterCompletion: '0'
+            e-install-adfs:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "C:\cfn\scripts\Install-ADFS.ps1 -DomainDNSName
+                    '
+                  - !Ref 'DomainDNSName'
+                  - ''' -DomainNetBIOSName '''
+                  - !Ref 'DomainNetBIOSName'
+                  - ''' -UserName '''
+                  - !Ref 'DomainAdminUser'
+                  - ''' -Password '''
+                  - !Ref 'DomainAdminPassword'
+                  - '''"'
+              waitAfterCompletion: '0'
+            f-disable-credssp:
+              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Disable-CredSSP.ps1"
+              waitAfterCompletion: '0'
+            g-signal-success:
+              command: powershell -Command "Write-AWSQuickStartStatus"
+              waitAfterCompletion: '0'
+    Properties:
+      ImageId: !Ref 'LatestAmiId'
+      IamInstanceProfile: !Ref 'ADFSProfile'
+      InstanceType: !Ref 'WAPADFSInstanceType'
+      NetworkInterfaces:
+        - DeleteOnTermination: 'true'
+          DeviceIndex: 0
+          SubnetId: !Ref 'PrivateSubnet2ID'
+          GroupSet:
+            - !Ref 'DomainMemberSGID'
+            - !Ref 'ADFSSecurityGroup'
+      Tags:
+        - Key: Name
+          Value: ADFS2
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: '100'
+            VolumeType: gp2
+        - DeviceName: /dev/xvdb
+          VirtualName: ephemeral0
+      KeyName: !Ref 'KeyPairName'
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<script>\n"
+            - 'cfn-init.exe -v -c config -s '
+            - !Ref 'AWS::StackId'
+            - ' -r ADFS2 '
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - "\n"
+            - </script>
+  WAP1WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: WAP1
+    Properties:
+      Handle: !Ref 'WAP1WaitHandle'
+      Timeout: '3600'
+  WAP1WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  WAP2WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: WAP2
+    Properties:
+      Handle: !Ref 'WAP2WaitHandle'
+      Timeout: '3600'
+  WAP2WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  ADFS1WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: ADFS1
+    Properties:
+      Handle: !Ref 'ADFS1WaitHandle'
+      Timeout: '3600'
+  ADFS1WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  ADFS2WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: ADFS2
+    Properties:
+      Handle: !Ref 'ADFS2WaitHandle'
+      Timeout: '3600'
+  ADFS2WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  WAPSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable traffic to WAP Servers from the internet
+      VpcId: !Ref 'VPCID'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: '0.0.0.0/0'
+  ADFSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable traffic to ADFS servers
+      VpcId: !Ref 'VPCID'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: !Ref 'VPCCIDR'
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: !Ref 'VPCCIDR'
+        - IpProtocol: tcp
+          FromPort: '445'
+          ToPort: '445'
+          CidrIp: !Ref 'VPCCIDR'
