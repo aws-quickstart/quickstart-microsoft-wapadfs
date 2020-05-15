@@ -115,7 +115,7 @@ try {
                         Write-Host $line
                         $entry = New-Object -TypeName PSObject
                     }
-                    if ($line -match "  (?<variable>[\w\s]+):\s+``(?<value>.*)'") {
+                    if ($line -match "  (?<variable>[\w\s]+):\s+`"(?<value>.*)`"") {
                         # Populate CA entry
                         $entry | Add-Member -MemberType NoteProperty -Name $matches.variable -Value $matches.value -Force
                     }
