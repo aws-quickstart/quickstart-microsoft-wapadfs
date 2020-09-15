@@ -2,6 +2,6 @@
 // Identify your target audience and explain how/why they would use this Quick Start.
 //Avoid borrowing text from third-party websites (copying text from AWS service documentation is fine). Also, avoid marketing-speak, focusing instead on the technical aspect.
 
-This Quick Start reference deployment guide provides step-by-step instructions for deploying {partner-product-short-name} on the AWS Cloud.
+This Quick Start reference deployment guide discusses architectural considerations and configuration steps for deploying a Web Application Proxy and Active Directory Federation Services (AD FS) environment on the Amazon Web Services (AWS) Cloud. It also provides links for viewing and launching https://aws.amazon.com/cloudformation/[AWS CloudFormation] templates that automate the deployment.
 
-This Quick Start is for users who <target audience and usage scenario>
+The guide is for IT infrastructure architects, administrators, and DevOps professionals who are planning to implement or extend their Web Application Proxy and AD FS workloads on the AWS Cloud.

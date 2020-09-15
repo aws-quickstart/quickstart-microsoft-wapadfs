@@ -2,4 +2,27 @@
 // Briefly describe the software. Use consistent and clear branding. 
 // Include the benefits of using the software on AWS, and provide details on usage scenarios.
 
-<Describe how the software works on AWS.>
+== Web Application Proxy and AD FS on AWS
+
+Microsoft Active Directory Federation Services (AD FS) is a Windows Server role that provides identity federation and single sign-on (SSO) capabilities for users accessing applications in an AD FS-secured environment, or with federated partner organizations. Put simply, AD FS authenticates users and provides security tokens to applications or federated partner applications that trust AD FS.
+
+For example, you could implement identity federation with AWS Identity and Access Management (IAM) and AD FS, and then use your Active Directory user name and password (instead of the AWS root account or IAM user credentials) to sign in to the AWS Management Console, or to make calls to AWS APIs.
+
+Like domain controllers and other internal server workloads, AD FS servers are deployed in a private virtual private cloud (VPC) subnet. In order to make AD FS accessible to external users, you can deploy the Web Application Proxy role on Windows Server 2012 R2. The Web Application Proxy server can proxy requests to the AD FS infrastructure for users who are connecting from an external location, without the need for VPN connectivity.
+
+You can also use Web Application Proxy to selectively publish and pre-authenticate connections to internal web applications, allowing external users outside your organization to access those applications over the internet.
+
+In this guide, we’ll take a look at using your own Active Directory Domain Services (AD DS) infrastructure in AWS, along with AD FS and Web Application Proxy, to provide seamless external access to web applications running in AWS.
+
+Some of the benefits and features of publishing applications with Web Application Proxy and AD FS are:
+
+* *Network isolation* – Publishing web applications through Web Application Proxy means that back-end servers are never directly exposed to the internet. You can publish popular web-based workloads such as Microsoft SharePoint, Outlook Web App (OWA), Exchange ActiveSync, Lync (Skype for Business), and even custom web applications through Web Application Proxy.
+* *Denial-of-service (DoS) protection* – The Web Application Proxy infrastructure uses several mechanisms to implement basic DoS protection, such as throttling and queuing, before routing connections to back-end web applications.
+* *Multi-factor authentication* – Pre-authentication with AD FS provides support for smart cards, device authentication, and more.
+* *Single sign-on (SSO)* – This functionality provides users with seamless access to applications without re-prompting for credentials after initial authentication.
+* *Workplace Join* - Users can connect devices that are not typically domain-joined, such as personal laptops, tablets, and smartphones, to their company’s resources. Known devices can be granted conditional access to applications, and you can require that devices register before gaining access to published applications.
+
+For further details, see https://technet.microsoft.com/en-us/library/dn383650.aspx[Planning to Publish Applications Using Web Application Proxy] on Microsoft TechNet.
+
+This guide and associated AWS CloudFormation template can be used in conjunction with https://aws.amazon.com/quickstart/[other AWS Quick Starts] to securely publish web applications running on SharePoint, Exchange, Lync, or your own web-based applications. The infrastructure deployed by this Quick Start enables external users to pre-authenticate to AD FS to access these web applications, without exposing the applications or AD FS infrastructure directly to the internet. You can also use this infrastructure to enable federation with AWS.
+

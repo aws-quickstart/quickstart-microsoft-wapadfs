@@ -19,6 +19,30 @@ This Quick Start requires a subscription to the AMI for {partner-product-short-n
 endif::marketplace_subscription[]
 // \Not to be edited
 
+===  Create a http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html[key pair] in your preferred Region.
+
+To do this, in the navigation pane of the Amazon EC2 console, choose *Key Pairs*, *Create Key Pair*, type a name, and then choose *Create*.
+
+[#Deploy1]
+.Creating a key pair
+[link=images/image4.png]
+image::../images/image4.png[Deploy1,image,width=634,height=307]
+
+Amazon EC2 uses public-key cryptography to encrypt and decrypt login information. To be able to log in to your instances, you must create a key pair. With Windows instances, we use the key pair to obtain the administrator password via the Amazon EC2 console and then log in using Remote Desktop Protocol (RDP) as explained in the http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair[step-by-step instructions] in the _Amazon Elastic Compute Cloud User Guide_.
+
+=== If necessary, https://console.aws.amazon.com/support/home#/case/create?issueType=service-limit-increase&limitType=service-code-[request a service limit increase] for the Amazon EC2 *c4.2xlarge* instance type.
+
+To do this, in the AWS Support Center, choose *Create Case*, *Service Limit Increase*, *EC2 instances*, and then complete the fields in the limit increase form, as shown in Figure 4. The current default limit is 20 instances.
++
+You might need to request an increase if you already have an existing deployment that uses this instance type, and you think you might exceed the default limit with this reference deployment. It might take a few days for the new service limit to become effective. For more information, see http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html[Amazon EC2 Service Limits] in the AWS documentation.
+
+*Note* The Quick Start uses five Elastic IP addresses by default: two for the NAT gateways, two for the proxies, and one for the RD Gateway instance. The default limit for Elastic IP addresses is five per AWS Region. If you’re planning to deploy multiple RD Gateway instances by configuring the *Number of RDGW Hosts* parameter, we recommend that you also request an increase in the Elastic IP address limit: In the https://console.aws.amazon.com/support/home#/case/create?issueType=service-limit-increase&limitType=service-code-[AWS Support Center], choose *Create Case*, *Service Limit Increase*, *Elastic IPs*, and then complete the fields.
+
+[#Deploy2]
+.Requesting a service limit increase
+[link=images/image5.png]
+image::../images/image5.png[Deploy2,image,width=648,height=425]
+
 === Launch the Quick Start
 
 NOTE: You are responsible for the cost of the AWS services used while running this Quick Start reference deployment. There is no additional cost for using this Quick Start. For full details, see the pricing pages for each AWS service used by this Quick Start. Prices are subject to change.
@@ -27,11 +51,11 @@ NOTE: You are responsible for the cost of the AWS services used while running th
 
 [cols=2*]
 |===
-^|http://qs_launch_link[Deploy {partner-product-short-name} into a new VPC on AWS^]
-^|http://qs_template_link[View template^]
+^|https://fwd.aws/eN64n[Deploy {partner-product-short-name} into a new VPC on AWS^]
+^|https://github.com/aws-quickstart/quickstart-microsoft-wapadfs/blob/main/templates/wap-adfs-master.template[View template^]
 
-^|http://qs_launch_link[Deploy {partner-product-short-name} into an existing VPC on AWS^]
-^|http://qs_template_link[View template^]
+^|https://fwd.aws/jpzqA[Deploy {partner-product-short-name} into an existing VPC on AWS^]
+^|https://github.com/aws-quickstart/quickstart-microsoft-wapadfs/blob/main/templates/wap-adfs.template[View template^]
 |===
 
 WARNING: If you’re deploying {partner-product-short-name} into an existing VPC, make sure that your VPC has two private subnets in different Availability Zones for the workload instances, and that the subnets aren’t shared. This Quick Start doesn’t support https://docs.aws.amazon.com/vpc/latest/userguide/vpc-sharing.html[shared subnets^]. These subnets require https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html[NAT gateways^] in their route tables, to allow the instances to download packages and software without exposing them to the internet.
