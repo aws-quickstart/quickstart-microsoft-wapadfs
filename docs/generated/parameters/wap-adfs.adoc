@@ -1,0 +1,38 @@
+
+.Network Configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|VPC CIDR
+(`VPCCIDR`)|`10.0.0.0/16`|CIDR Block used by the VPC|VPC ID
+(`VPCID`)|`**__Requires input__**`|ID of the VPC (e.g., vpc-0343606e)|Private Subnet 1 ID
+(`PrivateSubnet1ID`)|`**__Requires input__**`|ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)|Private Subnet 2 ID
+(`PrivateSubnet2ID`)|`**__Requires input__**`|ID of the private subnet 2 in Availability Zone 2 (e.g., subnet-a0246dcd)|Public Subnet 1 ID
+(`PublicSubnet1ID`)|`**__Requires input__**`|ID of the public subnet 1 in Availability Zone 1 (e.g., subnet-e3246d8e)|Public Subnet 2 ID
+(`PublicSubnet2ID`)|`**__Requires input__**`|ID of the public subnet 2 in Availability Zone 2 (e.g., subnet-e3246d8e)
+|===
+.Amazon EC2 Configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Key Pair Name
+(`KeyPairName`)|`**__Requires input__**`|Public/private key pairs allow you to securely connect to your instance after it launches|WAP and ADFS Server Instance Type
+(`WAPADFSInstanceType`)|`c4.2xlarge`|Amazon EC2 instance type for the WAP and ADFS Servers|SSM Parameter to Grab Latest AMI ID
+(`LatestAmiId`)|`/aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base`|NO_DESCRIPTION
+|===
+.Microsoft Active Directory Configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Domain DNS Name
+(`DomainDNSName`)|`example.com`|Fully qualified domain name (FQDN) of the forest root domain e.g. corp.example.com|Domain NetBIOS Name
+(`DomainNetBIOSName`)|`example`|NetBIOS name of the domain (upto 15 characters) for users of earlier versions of Windows e.g. CORP|Domain Admin User Name
+(`DomainAdminUser`)|`StackAdmin`|User name for the account that will be added as Domain Administrator. This is separate from the default "Administrator" account|Domain Admin Password
+(`DomainAdminPassword`)|`**__Requires input__**`|Password for the domain admin user. Must be at least 8 characters containing letters, numbers and symbols|Domain Member Security Group ID
+(`DomainMemberSGID`)|`**__Requires input__**`|ID of the Domain Member Security Group (e.g., sg-7f16e910)
+|===
+.AWS Quick Start Configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Quick Start S3 Bucket Name
+(`QSS3BucketName`)|`aws-quickstart`|S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).|Quick Start S3 bucket region
+(`QSS3BucketRegion`)|`us-east-1`|The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.|Quick Start S3 Key Prefix
+(`QSS3KeyPrefix`)|`quickstart-microsoft-wapadfs/`|S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
+|===
