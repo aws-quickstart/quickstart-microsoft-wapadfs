@@ -791,7 +791,6 @@ p.footer-text a{color:#d7d8d8}
 <ul class="sectlevel1">
 <li><a href="#_overview">Overview</a></li>
 <li><a href="#_web_application_proxy_and_ad_fs_on_aws">Web Application Proxy and AD FS on AWS</a></li>
-<li><a href="#_web_application_proxy_and_ad_fs_on_aws_2">Web Application Proxy and AD FS on AWS</a></li>
 <li><a href="#_cost">Cost</a></li>
 <li><a href="#_software_licenses">Software licenses</a></li>
 <li><a href="#_architecture">Architecture</a></li>
@@ -883,12 +882,6 @@ report bugs, or submit feature ideas for this Quick Start.
 </div>
 <div class="sect1">
 <h2 id="_web_application_proxy_and_ad_fs_on_aws">Web Application Proxy and AD FS on AWS</h2>
-<div class="sectionbody">
-
-</div>
-</div>
-<div class="sect1">
-<h2 id="_web_application_proxy_and_ad_fs_on_aws_2">Web Application Proxy and AD FS on AWS</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Microsoft Active Directory Federation Services (AD FS) is a Windows Server role that provides identity federation and single sign-on (SSO) capabilities for users accessing applications in an AD FS-secured environment, or with federated partner organizations. Put simply, AD FS authenticates users and provides security tokens to applications or federated partner applications that trust AD FS.</p>
@@ -1793,6 +1786,9 @@ Region</code>, and <code>Quick Start S3 key prefix</code>. Changing these parame
 </div>
 <div class="paragraph">
 <p>In order to take advantage of header inspection, it is recommended that Application Load Balancers (rather than Network Load Balancers or Classic Load Balancers) be deployed. The Internet-facing load balancer for the Web Application Proxy layer should be configured to accept HTTPS requests on port 443 and forward these requests to the Web Application Proxy servers, and a certificate obtained from a trusted third-party Certificate Authority will need to be assigned to this listener. The internal load balancer will also be configured to accept HTTPS requests on port 443 but its listener can be assigned an internally-signed certificate.</p>
+</div>
+<div class="paragraph">
+<p>See <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-requirements">Microsoft AD FS Requirements</a> for detailed load balancing and health check requirements.</p>
 </div>
 </div>
 <div class="sect2">

@@ -39,6 +39,8 @@ Both the Web Application Proxy and AD FS layers can be load balanced individuall
 
 In order to take advantage of header inspection, it is recommended that Application Load Balancers (rather than Network Load Balancers or Classic Load Balancers) be deployed. The Internet-facing load balancer for the Web Application Proxy layer should be configured to accept HTTPS requests on port 443 and forward these requests to the Web Application Proxy servers, and a certificate obtained from a trusted third-party Certificate Authority will need to be assigned to this listener. The internal load balancer will also be configured to accept HTTPS requests on port 443 but its listener can be assigned an internally-signed certificate.
 
+See https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-requirements[Microsoft AD FS Requirements] for detailed load balancing and health check requirements.
+
 [[certificates]]
 === Certificates
 

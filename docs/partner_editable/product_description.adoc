@@ -2,8 +2,6 @@
 // Briefly describe the software. Use consistent and clear branding. 
 // Include the benefits of using the software on AWS, and provide details on usage scenarios.
 
-== Web Application Proxy and AD FS on AWS
-
 Microsoft Active Directory Federation Services (AD FS) is a Windows Server role that provides identity federation and single sign-on (SSO) capabilities for users accessing applications in an AD FS-secured environment, or with federated partner organizations. Put simply, AD FS authenticates users and provides security tokens to applications or federated partner applications that trust AD FS.
 
 For example, you could implement identity federation with AWS Identity and Access Management (IAM) and AD FS, and then use your Active Directory user name and password (instead of the AWS root account or IAM user credentials) to sign in to the AWS Management Console, or to make calls to AWS APIs.
