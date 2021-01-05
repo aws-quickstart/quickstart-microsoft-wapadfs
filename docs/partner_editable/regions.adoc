@@ -1,1 +1,1 @@
-This Quick Start is supported in all AWS Regions
+This Quick Start is supported in all non-GovCloud AWS Regions
