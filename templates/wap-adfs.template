@@ -2,9 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
   This template deploys two Web Application Proxy servers into public subnets in each
   availability zone, as well as two ADFS servers into the private subnets in each
-  availability zone. **WARNING** This template creates Amazon EC2 Windows instance
-  and related resources. You will be billed for the AWS resources used if you create
-  a stack from this template. (qs-1qup6rai9)
+  availability zone. The Active Directory domain being joined must include a server
+  with the Certificate Authority role. **WARNING** This template creates Amazon EC2
+  Windows instances and related resources. You will be billed for the AWS resources
+  used if you create a stack from this template. (qs-1qup6rai9)
 Metadata:
   QuickStartDocumentation:
     EntrypointName: "Launch into an existing VPC"
