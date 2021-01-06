@@ -332,6 +332,7 @@ Resources:
         DomainDNSName: !Ref 'DomainDNSName'
         DomainNetBIOSName: !Ref 'DomainNetBIOSName'
         KeyPairName: !Ref 'KeyPairName'
+        PKI: 'One-Tier'
         PrivateSubnet1ID: !GetAtt 'VPCStack.Outputs.PrivateSubnet1AID'
         PrivateSubnet2ID: !GetAtt 'VPCStack.Outputs.PrivateSubnet2AID'
         QSS3BucketName: !Ref 'QSS3BucketName'
