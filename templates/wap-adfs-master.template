@@ -31,6 +31,7 @@ Metadata:
           - ADServer2InstanceType
           - ADServer2NetBIOSName
           - ADServer2PrivateIP
+          - DataDriveSizeGiB
           - RDGWInstanceType
           - WAPADFSInstanceType
       - Label:
@@ -65,6 +66,8 @@ Metadata:
         default: Domain Controller 2 Private IP Address
       AvailabilityZones:
         default: Availability Zones
+      DataDriveSizeGiB:
+        default: Size of the domain controller data drive
       DomainAdminPassword:
         default: Domain Admin Password
       DomainAdminUser:
@@ -103,14 +106,15 @@ Parameters:
   ADServer1InstanceType:
     AllowedValues:
       - t2.large
-      - m3.large
-      - m3.xlarge
-      - m3.2xlarge
       - m4.large
       - m4.xlarge
       - m4.2xlarge
       - m4.4xlarge
-    Default: m4.xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+    Default: m5.large
     Description: Amazon EC2 instance type for the first Active Directory instance
     Type: String
   ADServer1NetBIOSName:
@@ -129,14 +133,15 @@ Parameters:
   ADServer2InstanceType:
     AllowedValues:
       - t2.large
-      - m3.large
-      - m3.xlarge
-      - m3.2xlarge
       - m4.large
       - m4.xlarge
       - m4.2xlarge
       - m4.4xlarge
-    Default: m4.xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+    Default: m5.large
     Description: Amazon EC2 instance type for the second Active Directory instance
     Type: String
   ADServer2NetBIOSName:
@@ -156,6 +161,10 @@ Parameters:
     Description: 'List of Availability Zones to use for the subnets in the VPC. Note:
       The logical order is preserved and only 2 AZs are used for this deployment.'
     Type: List<AWS::EC2::AvailabilityZone::Name>
+  DataDriveSizeGiB:
+    Type: 'Number'
+    Default: '20'
+    Description: Size of Data Drive that contains SYSVOL and NTDS
   DomainAdminPassword:
     AllowedPattern: (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
     Description: Password for the domain admin user. Must be at least 8 characters
@@ -166,7 +175,7 @@ Parameters:
     Type: String
   DomainAdminUser:
     AllowedPattern: '[a-zA-Z0-9]*'
-    Default: StackAdmin
+    Default: Admin
     Description: User name for the account that will be added as Domain Administrator.
       This is separate from the default "Administrator" account
     MaxLength: '25'
@@ -327,6 +336,7 @@ Resources:
         ADServer2InstanceType: !Ref 'ADServer2InstanceType'
         ADServer2NetBIOSName: !Ref 'ADServer2NetBIOSName'
         ADServer2PrivateIP: !Ref 'ADServer2PrivateIP'
+        DataDriveSizeGiB: !Ref 'DataDriveSizeGiB'
         DomainAdminPassword: !Ref 'DomainAdminPassword'
         DomainAdminUser: !Ref 'DomainAdminUser'
         DomainDNSName: !Ref 'DomainDNSName'

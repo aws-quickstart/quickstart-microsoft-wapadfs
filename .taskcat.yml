@@ -17,13 +17,7 @@ tests:
   wapadfs:
     parameters:
       AvailabilityZones: $[taskcat_genaz_2]
-      ADServer1NetBIOSName: DC-wapadfs-1
-      ADServer2NetBIOSName: DC-wapadfs-2
-      ADServer1PrivateIP: "10.0.0.10"
-      ADServer2PrivateIP: "10.0.32.10"
       DomainAdminPassword: $[taskcat_genpass_8S]
-      DomainAdminUser: StackAdmin
-      DomainDNSName: example.com
       KeyPairName: $[taskcat_getkeypair]
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
