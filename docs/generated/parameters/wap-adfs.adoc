@@ -16,7 +16,7 @@
 |Parameter label (name) |Default value|Description|Key Pair Name
 (`KeyPairName`)|`**__Requires input__**`|Public/private key pairs allow you to securely connect to your instance after it launches|WAP and ADFS Server Instance Type
 (`WAPADFSInstanceType`)|`c4.2xlarge`|Amazon EC2 instance type for the WAP and ADFS Servers|SSM Parameter to Grab Latest AMI ID
-(`LatestAmiId`)|`/aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base`|NO_DESCRIPTION
+(`LatestAmiId`)|`/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base`|NO_DESCRIPTION
 |===
 .Microsoft Active Directory Configuration
 [width="100%",cols="16%,11%,73%",options="header",]

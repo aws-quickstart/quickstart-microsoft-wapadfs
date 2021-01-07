@@ -1,13 +1,10 @@
 // If no preperation is required, remove all content from here
 
-==== Prepare your AWS account
-
-_Describe any setup required in the AWS account prior to template launch_
-
-==== Prepare your {partner-company-name} account
-
-_Describe any setup required in the partner portal/account prior to template launch_
-
 ==== Prepare for the deployment
 
-_Describe any preparation required to complete the product build, such as obtaining licenses or placing files in S3_
+If you are deploying the WAP ADFS Quick Start into an existing VPC, ensure your Active Directory environment includes at least one certificate authority (CA). If you are using AWS Managed Microsoft Active Directory this will require you to have at least one domain-joined server that can be configured as the CA, since AWS Managed Microsoft Active Directory does not act as a CA natively. A domain-joined server can be promoted to a CA by executing the following PowerShell code from an elevated command prompt:
+
+----
+Add-WindowsFeature Adcs-Cert-Authority -IncludeManagementTools
+Install-AdcsCertificationAuthority -CAType EnterpriseRootCA
+----

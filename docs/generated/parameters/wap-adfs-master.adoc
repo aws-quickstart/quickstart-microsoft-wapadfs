@@ -16,12 +16,13 @@
 |===
 |Parameter label (name) |Default value|Description|Key Pair Name
 (`KeyPairName`)|`**__Requires input__**`|Public/private key pairs allow you to securely connect to your instance after it launches|Domain Controller 1 Instance Type
-(`ADServer1InstanceType`)|`m4.xlarge`|Amazon EC2 instance type for the first Active Directory instance|Domain Controller 1 NetBIOS Name
+(`ADServer1InstanceType`)|`m5.large`|Amazon EC2 instance type for the first Active Directory instance|Domain Controller 1 NetBIOS Name
 (`ADServer1NetBIOSName`)|`DC1`|NetBIOS name of the first Active Directory server (up to 15 characters)|Domain Controller 1 Private IP Address
 (`ADServer1PrivateIP`)|`10.0.0.10`|Fixed private IP for the first Active Directory server located in Availability Zone 1|Domain Controller 2 Instance Type
-(`ADServer2InstanceType`)|`m4.xlarge`|Amazon EC2 instance type for the second Active Directory instance|Domain Controller 2 NetBIOS Name
+(`ADServer2InstanceType`)|`m5.large`|Amazon EC2 instance type for the second Active Directory instance|Domain Controller 2 NetBIOS Name
 (`ADServer2NetBIOSName`)|`DC2`|NetBIOS name of the second Active Directory server (up to 15 characters)|Domain Controller 2 Private IP Address
-(`ADServer2PrivateIP`)|`10.0.32.10`|Fixed private IP for the second Active Directory server located in Availability Zone 2|Remote Desktop Gateway Instance Type
+(`ADServer2PrivateIP`)|`10.0.32.10`|Fixed private IP for the second Active Directory server located in Availability Zone 2|Size of the domain controller data drive
+(`DataDriveSizeGiB`)|`20`|Size of Data Drive that contains SYSVOL and NTDS|Remote Desktop Gateway Instance Type
 (`RDGWInstanceType`)|`t2.large`|Amazon EC2 instance type for the Remote Desktop Gateway instances|WAP and ADFS Server Instance Type
 (`WAPADFSInstanceType`)|`c4.2xlarge`|Amazon EC2 instance type for the WAP and ADFS Servers
 |===
@@ -31,8 +32,16 @@
 |Parameter label (name) |Default value|Description|Domain DNS Name
 (`DomainDNSName`)|`example.com`|Fully qualified domain name (FQDN) of the forest root domain e.g. example.com|Domain NetBIOS Name
 (`DomainNetBIOSName`)|`example`|NetBIOS name of the domain (up to 15 characters) for users of earlier versions of Windows e.g. EXAMPLE|Domain Admin User Name
-(`DomainAdminUser`)|`StackAdmin`|User name for the account that will be added as Domain Administrator. This is separate from the default "Administrator" account|Domain Admin Password
+(`DomainAdminUser`)|`Admin`|User name for the account that will be added as Domain Administrator. This is separate from the default "Administrator" account|Domain Admin Password
 (`DomainAdminPassword`)|`**__Requires input__**`|Password for the domain admin user. Must be at least 8 characters containing letters, numbers and symbols
+|===
+.Microsoft Active Directory Certificate Services Configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Deploy PKI Infrastructure
+(`PKI`)|`One-Tier`|Do you want to Deploy PKI Infrastructure if so what kind, Two Tier or One Tier|Offline Root CA NetBIOS Name
+(`OrCaServerNetBIOSName`)|`ORCA1`|NetBIOS name of the Offline Root CA server (Only Used For Two Tier PKI) (up to 15 characters)|Enterprise Root CA NetBIOS Name
+(`EntCaServerNetBIOSName`)|`ENTCA1`|NetBIOS name of the Enterprise Root or Subordinate CA server (up to 15 characters)
 |===
 .Microsoft Remote Desktop Gateway Configuration
 [width="100%",cols="16%,11%,73%",options="header",]

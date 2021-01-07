@@ -6,7 +6,7 @@ AWS Cloud.
 [#architecture1]
 .Quick Start architecture for _{partner-product-short-name}_ on AWS
 [link=images/architecture_diagram.png]
-image::../images/architecture_diagram.png[Architecture,width=693,height=608]
+image::../images/architecture_diagram.png[Architecture,width=100%,height=100%]
 
 The AWS CloudFormation template creates a fully functional AD FS federation server farm with Web Application Proxy on the AWS Cloud. The template deploys the following components:
 
