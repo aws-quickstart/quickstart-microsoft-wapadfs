@@ -118,7 +118,7 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
   LatestAmiId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
+    Default: /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base
   PrivateSubnet1ID:
     Description: ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)
     Type: AWS::EC2::Subnet::Id
@@ -415,8 +415,8 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: '100'
-            VolumeType: gp2
+            VolumeSize: 100
+            VolumeType: gp3
         - DeviceName: /dev/xvdb
           VirtualName: ephemeral0
       KeyName: !Ref 'KeyPairName'
@@ -591,8 +591,8 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: '100'
-            VolumeType: gp2
+            VolumeSize: 100
+            VolumeType: gp3
         - DeviceName: /dev/xvdb
           VirtualName: ephemeral0
       KeyName: !Ref 'KeyPairName'
@@ -783,8 +783,8 @@ Resources:
       IamInstanceProfile: !Ref 'ADFSProfile'
       InstanceType: !Ref 'WAPADFSInstanceType'
       NetworkInterfaces:
-        - DeleteOnTermination: 'true'
-          DeviceIndex: 0
+        - DeleteOnTermination: True
+          DeviceIndex: '0'
           SubnetId: !Ref 'PrivateSubnet1ID'
           GroupSet:
             - !Ref 'DomainMemberSGID'
@@ -795,8 +795,8 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: '100'
-            VolumeType: gp2
+            VolumeSize: 100
+            VolumeType: gp3
         - DeviceName: /dev/xvdb
           VirtualName: ephemeral0
       KeyName: !Ref 'KeyPairName'
@@ -962,8 +962,8 @@ Resources:
       IamInstanceProfile: !Ref 'ADFSProfile'
       InstanceType: !Ref 'WAPADFSInstanceType'
       NetworkInterfaces:
-        - DeleteOnTermination: 'true'
-          DeviceIndex: 0
+        - DeleteOnTermination: True
+          DeviceIndex: '0'
           SubnetId: !Ref 'PrivateSubnet2ID'
           GroupSet:
             - !Ref 'DomainMemberSGID'
@@ -974,8 +974,8 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: '100'
-            VolumeType: gp2
+            VolumeSize: 100
+            VolumeType: gp3
         - DeviceName: /dev/xvdb
           VirtualName: ephemeral0
       KeyName: !Ref 'KeyPairName'
@@ -1029,8 +1029,8 @@ Resources:
       VpcId: !Ref 'VPCID'
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: '443'
-          ToPort: '443'
+          FromPort: 443
+          ToPort: 443
           CidrIp: '0.0.0.0/0'
   ADFSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -1039,14 +1039,14 @@ Resources:
       VpcId: !Ref 'VPCID'
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: '443'
-          ToPort: '443'
+          FromPort: 443
+          ToPort: 443
           CidrIp: !Ref 'VPCCIDR'
         - IpProtocol: tcp
-          FromPort: '80'
-          ToPort: '80'
+          FromPort: 80
+          ToPort: 80
           CidrIp: !Ref 'VPCCIDR'
         - IpProtocol: tcp
-          FromPort: '445'
-          ToPort: '445'
+          FromPort: 445
+          ToPort: 445
           CidrIp: !Ref 'VPCCIDR'
