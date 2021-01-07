@@ -41,6 +41,12 @@ Metadata:
           - DomainAdminUser
           - DomainAdminPassword
       - Label:
+          default: Microsoft Active Directory Certificate Services Configuration
+        Parameters:
+          - PKI
+          - OrCaServerNetBIOSName
+          - EntCaServerNetBIOSName
+      - Label:
           default: Microsoft Remote Desktop Gateway Configuration
         Parameters:
           - NumberOfRDGWHosts
@@ -75,6 +81,12 @@ Metadata:
         default: Domain NetBIOS Name
       KeyPairName:
         default: Key Pair Name
+      PKI:
+        default: Deploy PKI Infrastructure
+      OrCaServerNetBIOSName:
+        default: Offline Root CA NetBIOS Name
+      EntCaServerNetBIOSName:
+        default: Enterprise Root CA NetBIOS Name
       NumberOfRDGWHosts:
         default: Number of RDGW Hosts
       PrivateSubnet1CIDR:
@@ -192,6 +204,28 @@ Parameters:
     Description: Public/private key pairs allow you to securely connect to your instance
       after it launches
     Type: AWS::EC2::KeyPair::KeyName
+  PKI:
+    AllowedValues:
+      - 'One-Tier'
+      - 'Two-Tier'
+      - 'No'
+    Default: 'One-Tier'
+    Description: Do you want to Deploy PKI Infrastructure if so what kind, Two Tier or One Tier
+    Type: String
+  OrCaServerNetBIOSName:
+    AllowedPattern: '[a-zA-Z0-9\-]+'
+    Description: NetBIOS name of the Offline Root CA server (Only Used For Two Tier PKI) (up to 15 characters)
+    MaxLength: '15'
+    MinLength: '1'
+    Type: String
+    Default: ORCA1
+  EntCaServerNetBIOSName:
+    AllowedPattern: '[a-zA-Z0-9\-]+'
+    Description: NetBIOS name of the Enterprise Root or Subordinate CA server (up to 15 characters)
+    MaxLength: '15'
+    MinLength: '1'
+    Type: String
+    Default: ENTCA1
   NumberOfRDGWHosts:
     AllowedValues:
       - '0'
@@ -331,7 +365,9 @@ Resources:
         DomainAdminUser: !Ref 'DomainAdminUser'
         DomainDNSName: !Ref 'DomainDNSName'
         DomainNetBIOSName: !Ref 'DomainNetBIOSName'
-        EntCaServerSubnet: !GetAtt 'VPCStack.Outputs.PrivateSubnet1AID'
+        PKI: !Ref 'PKI'
+        OrCaServerNetBIOSName: !Ref 'OrCaServerNetBIOSName'
+        EntCaServerNetBIOSName: !Ref 'EntCaServerNetBIOSName'
         KeyPairName: !Ref 'KeyPairName'
         PrivateSubnet1ID: !GetAtt 'VPCStack.Outputs.PrivateSubnet1AID'
         PrivateSubnet2ID: !GetAtt 'VPCStack.Outputs.PrivateSubnet2AID'
