@@ -1035,7 +1035,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 3389
           ToPort: 3389
-          CidrIp: !Ref 'DomainMemberSGID'
+          SourceSecurityGroupId: !Ref 'DomainMemberSGID'
   ADFSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -1057,4 +1057,4 @@ Resources:
         - IpProtocol: tcp
           FromPort: 3389
           ToPort: 3389
-          CidrIp: !Ref 'DomainMemberSGID'
+          SourceSecurityGroupId: !Ref 'DomainMemberSGID'
