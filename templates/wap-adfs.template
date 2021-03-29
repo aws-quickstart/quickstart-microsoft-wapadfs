@@ -2,10 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
   This template deploys two Web Application Proxy servers into public subnets in each
   availability zone, as well as two ADFS servers into the private subnets in each
-  availability zone. The Active Directory domain being joined must include a server
-  with the Certificate Authority role. **WARNING** This template creates Amazon EC2
-  Windows instances and related resources. You will be billed for the AWS resources
-  used if you create a stack from this template. (qs-1qup6rai9)
+  availability zone. The Active Directory domain being joined to must include a server
+  with the Certificate Authority role and the Secret ARN account must be able to create and deploy certificates.
+  **WARNING** This template creates Amazon EC2 Windows instances and related resources. You will 
+  be billed for the AWS resources used if you create a stack from this template. (qs-1qup6rai9)
 Metadata:
   QuickStartDocumentation:
     EntrypointName: "Launch into an existing VPC"
@@ -25,16 +25,26 @@ Metadata:
           default: Amazon EC2 Configuration
         Parameters:
           - KeyPairName
-          - WAPADFSInstanceType
+          - InstanceType
           - LatestAmiId
       - Label:
-          default: Microsoft Active Directory Configuration
+          default: Microsoft Active Directory Domain Services Configuration
         Parameters:
+          - DirectoryType
+          - DomainController1IP
+          - DomainController2IP
           - DomainDNSName
           - DomainNetBIOSName
-          - DomainAdminUser
-          - DomainAdminPassword
+          - DomainAdminUserSecret
           - DomainMemberSGID
+      - Label:
+          default: ADFS and WAP Configuration
+        Parameters:
+          - WAPADFSInstanceType
+          - Adfs1NetBIOSName
+          - Adfs2NetBIOSName
+          - Wap1NetBIOSName
+          - Wap2NetBIOSName
       - Label:
           default: AWS Quick Start Configuration
         Parameters:
@@ -42,10 +52,22 @@ Metadata:
           - QSS3BucketRegion
           - QSS3KeyPrefix
     ParameterLabels:
-      DomainAdminPassword:
-        default: Domain Admin Password
-      DomainAdminUser:
-        default: Domain Admin User Name
+      Adfs1NetBIOSName:
+        default: ADFS Server 1 NetBIOS Name
+      Adfs2NetBIOSName:
+        default: ADFS Server 2 NetBIOS Name
+      Wap1NetBIOSName:
+        default: WAP Server 1 NetBIOS Name
+      Wap2NetBIOSName:
+        default: WAP Server 2 NetBIOS Name
+      DirectoryType:
+        default: Active Directory Domain Services Type
+      DomainController1IP:
+        default: IP the Instance will be used for DNS (Must be accessible)
+      DomainController2IP:
+        default: IP the Instance will be used for DNS (Must be accessible)    
+      DomainAdminUserSecret:
+        default: Secret ARN Containing Administrator Credentials
       DomainDNSName:
         default: Domain DNS Name
       DomainMemberSGID:
@@ -54,6 +76,8 @@ Metadata:
         default: Domain NetBIOS Name
       KeyPairName:
         default: Key Pair Name
+      LatestAmiId:
+        default: SSM Parameter to for Latest AMI ID
       PrivateSubnet1ID:
         default: Private Subnet 1 ID
       PrivateSubnet2ID:
@@ -62,8 +86,6 @@ Metadata:
         default: Public Subnet 1 ID
       PublicSubnet2ID:
         default: Public Subnet 2 ID
-      LatestAmiId:
-        default: SSM Parameter to Grab Latest AMI ID
       QSS3BucketName:
         default: Quick Start S3 Bucket Name
       QSS3BucketRegion:
@@ -77,27 +99,39 @@ Metadata:
       WAPADFSInstanceType:
         default: WAP and ADFS Server Instance Type
 Parameters:
-  DomainAdminPassword:
-    AllowedPattern: (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
-    Description: Password for the domain admin user. Must be at least 8 characters
-      containing letters, numbers and symbols
-    MaxLength: '32'
-    MinLength: '8'
-    NoEcho: 'true'
+  Adfs1NetBIOSName:
+    Default: ADFS1
+    Description: First ADFS Server NetBIOS Name
     Type: String
-  DomainAdminUser:
-    AllowedPattern: '[a-zA-Z0-9]*'
-    Default: StackAdmin
-    Description: User name for the account that will be added as Domain Administrator.
-      This is separate from the default "Administrator" account
-    MaxLength: '25'
-    MinLength: '5'
+  Adfs2NetBIOSName:
+    Default: ADFS2
+    Description: Second ADFS Server NetBIOS Name
+    Type: String
+  DirectoryType:
+    AllowedValues:
+      - AWSManaged
+      - SelfManaged
+    Default: SelfManaged
+    Description: Type of Active Directory the WAP / ADFS deployment will be integrated with, AWS Managed Microsoft AD or Self Managed AD
+    Type: String
+  DomainAdminUserSecret:
+    Default: arn:aws:secretsmanager:us-west-2:820097935833:secret:DefaultCreds-IsuSDO
+    Description: ARN for the Administrator credentials Secret with "username" and "password" key pairs. This account must be a member of Domain Admins with Self Managed directories or a member of AWS Delegated Administrators with AWS Managed Microsoft AD.
+    Type: String
+  DomainController1IP:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
+    Default: 10.0.0.10
+    Description: IP of DNS server that can resolve Active Directory domain (Must be accessible)
+    Type: String
+  DomainController2IP:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
+    Default: 10.0.32.10
+    Description: IP of DNS server that can resolve Active Directory domain (Must be accessible)
     Type: String
   DomainDNSName:
     AllowedPattern: '[a-zA-Z0-9\-]+\..+'
     Default: example.com
-    Description: Fully qualified domain name (FQDN) of the forest root domain e.g.
-      corp.example.com
+    Description: Fully qualified domain name (FQDN) of the domain the WAP / ADFS instances will join e.g. corp.example.com
     MaxLength: '25'
     MinLength: '3'
     Type: String
@@ -107,18 +141,16 @@ Parameters:
   DomainNetBIOSName:
     AllowedPattern: '[a-zA-Z0-9\-]+'
     Default: example
-    Description: NetBIOS name of the domain (upto 15 characters) for users of earlier
-      versions of Windows e.g. CORP
+    Description: NetBIOS name of the domain the WAP / ADFS instances will join (up to 15 characters) for users of earlier versions of Windows e.g. CORP
     MaxLength: '15'
     MinLength: '1'
     Type: String
   KeyPairName:
-    Description: Public/private key pairs allow you to securely connect to your instance
-      after it launches
+    Description: Public/private key pairs allow you to securely connect to your instance after it launches
     Type: AWS::EC2::KeyPair::KeyName
   LatestAmiId:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
   PrivateSubnet1ID:
     Description: ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)
     Type: AWS::EC2::Subnet::Id
@@ -133,42 +165,47 @@ Parameters:
     Type: AWS::EC2::Subnet::Id
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
-    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
-      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
-      (-).
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
     Default: aws-quickstart
-    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
-      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
-      It cannot start or end with a hyphen (-).
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
     Type: String
   QSS3BucketRegion:
-    Default: 'us-east-1'
-    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Default: us-east-1
+    Description: The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.
     Type: String
   QSS3KeyPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
-    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
-      uppercase letters, hyphens (-), and forward slash (/).
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
     Default: quickstart-microsoft-wapadfs/
-    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
-      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
-      forward slash (/).
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
     Type: String
   VPCCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
     Default: 10.0.0.0/16
-    Description: CIDR Block used by the VPC
+    Description: CIDR Block of the VPC
     Type: String
   VPCID:
     Description: ID of the VPC (e.g., vpc-0343606e)
     Type: AWS::EC2::VPC::Id
   WAPADFSInstanceType:
     AllowedValues:
-      - t2.large
-      - c4.2xlarge
-    Default: c4.2xlarge
-    Description: Amazon EC2 instance type for the WAP and ADFS Servers
+      - t3.medium
+      - t3.large
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+    Default: m5.large
+    Description: Amazon EC2 instance type for the WAP and ADFS Instances
+    Type: String
+  Wap1NetBIOSName:
+    Default: WAP1
+    Description: First WAP Server NetBIOS Name
+    Type: String
+  Wap2NetBIOSName:
+    Default: WAP2
+    Description: Second WAP Server NetBIOS Name
     Type: String
 Rules:
   SubnetsInVPC:
@@ -185,65 +222,94 @@ Conditions:
     - us-gov-west-1
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 Resources:
-  WAPRole:
+  ServerRole:
     Type: AWS::IAM::Role
     Properties:
       Policies:
         - PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - Action:
-                  - s3:GetObject
-                Resource: !Sub
-                  - arn:${AWS::Partition}:s3:::${S3Bucket}/${QSS3KeyPrefix}*
-                  - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-                Effect: Allow
-          PolicyName: aws-quick-start-s3-policy
-      Path: /
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Principal:
-              Service:
-                - ec2.amazonaws.com
-            Effect: Allow
-        Version: '2012-10-17'
-  WAPProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Roles:
-        - !Ref 'WAPRole'
-      Path: /
-  ADFSRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Policies:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::aws-ssm-${AWS::Region}/*
+                  - !Sub arn:aws:s3:::aws-windows-downloads-${AWS::Region}/*
+                  - !Sub arn:aws:s3:::amazon-ssm-${AWS::Region}/*
+                  - !Sub arn:aws:s3:::amazon-ssm-packages-${AWS::Region}/*
+                  - !Sub arn:aws:s3:::${AWS::Region}-birdwatcher-prod/*
+                  - !Sub arn:aws:s3:::patch-baseline-snapshot-${AWS::Region}/*
+                  - !Sub arn:aws:s3:::aws-ssm-distributor-file-${AWS::Region}/*
+                  - !Sub arn:aws:s3:::aws-ssm-document-attachments-${AWS::Region}/*
+          PolicyName: SSMAgent
         - PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - Action:
-                  - s3:GetObject
+              - Effect: Allow
+                Action: s3:ListBucket
                 Resource: !Sub
-                  - arn:${AWS::Partition}:s3:::${S3Bucket}/${QSS3KeyPrefix}*
+                  - 'arn:${AWS::Partition}:s3:::${S3Bucket}'
                   - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub
+                  - 'arn:${AWS::Partition}:s3:::${S3Bucket}/${QSS3KeyPrefix}*'
+                  - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+              - Effect: Allow
+                Action: ssm:StartAutomationExecution
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${WapAdfsAutomationDoc}:$DEFAULT
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:*:document/AWS-RunRemoteScript
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:*:document/AWS-RunPowerShellScript
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    'ssm:ResourceTag/aws:cloudformation:stack-name': !Ref AWS::StackName
+              - Sid: ReadOperations
                 Effect: Allow
-          PolicyName: aws-quick-start-s3-policy
+                Action:
+                  - ec2:DescribeInstances
+                  - ssm:DescribeInstanceInformation
+                  - ssm:ListCommands
+                  - ssm:ListCommandInvocations
+                Resource: '*'
+              - Effect: Allow
+                Action: cloudformation:SignalResource
+                Resource: !Sub 'arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/*'
+          PolicyName: AWS-Mgmt-Quick-Start-Policy
+        - PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource:
+                  - !Ref 'DomainAdminUserSecret'
+          PolicyName: AWS-Mgd-AD-Secret-Policy
       Path: /
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/CloudWatchAgentServerPolicy'
+      Tags:
+        - Key: StackName
+          Value: !Ref AWS::StackName
       AssumeRolePolicyDocument:
         Statement:
-          - Action:
-              - sts:AssumeRole
+          - Effect: Allow
+            Action: sts:AssumeRole
             Principal:
               Service:
                 - ec2.amazonaws.com
-            Effect: Allow
         Version: '2012-10-17'
-  ADFSProfile:
+  ServerProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
-        - !Ref 'ADFSRole'
+        - !Ref 'ServerRole'
       Path: /
   WAP1EIP:
     Type: AWS::EC2::EIP
@@ -255,773 +321,541 @@ Resources:
     Properties:
       InstanceId: !Ref 'WAP2'
       Domain: vpc
+  WapAdfsAutomationDoc:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Automation
+      Tags:
+        - Key: StackName
+          Value: !Ref AWS::StackName
+      Content:
+        schemaVersion: '0.3'
+        description: 'Deploy WAP Instances with SSM Automation'
+        parameters:
+          Adfs1NetBIOSName:
+            description: ADFS1 NetBIOS Name
+            type: String
+          Adfs2NetBIOSName:
+            description: ADFS1 NetBIOS Name
+            type: String
+          DirectoryType:
+            description: Type of Active Directory ADFS will be deployed to.
+            type: String
+          DomainAdminUserSecret:
+            description: Secret ARN Containing Administrator Credentials
+            type: String
+          DomainController1IP:
+            description: IP of DNS server that can resolve domain (Must be accessible)
+            type: 'String'
+          DomainController2IP:
+            description: IP of DNS server that can resolve domain (Must be accessible)
+            type: 'String'
+          DomainDNSName:
+            description: Domain DNS Name
+            type: String
+          DomainNetBIOSName:
+            description: Domain NetBIOS Name
+            type: String
+          QSS3BucketName:
+            description: Quick Start S3 Bucket Name
+            type: String
+          QSS3BucketRegion:
+            description: Quick Start S3 bucket region
+            type: String
+          QSS3KeyPrefix:
+            description: Quick Start S3 Key Prefix
+            type: String
+          StackName:
+            description: CF Stack Name Input for cfn resource signal
+            type: String
+          URLSuffix:
+            default: amazonaws.com
+            description: AWS URL suffix
+            type: String
+          Wap1NetBIOSName:
+            description: WAP1 NetBIOS Name
+            type: String
+          Wap2NetBIOSName:
+            description: WAP2 NetBIOS Name
+            type: String
+        mainSteps:
+          - name: InstanceIds
+            action: aws:executeAwsApi
+            onFailure: step:signalfailure
+            inputs:
+              Service: ec2
+              Api: DescribeInstances
+              Filters:
+                - Name: 'tag:Name'
+                  Values: ['{{Adfs1NetBIOSName}}', '{{Adfs2NetBIOSName}}', '{{Wap1NetBIOSName}}', '{{Wap2NetBIOSName}}']
+                - Name: 'tag:aws:cloudformation:stack-name'
+                  Values: ['{{StackName}}']
+                - Name: 'instance-state-name'
+                  Values: ['running']
+            outputs:
+              - Name: InstanceIds
+                Selector: '$.Reservations..Instances..InstanceId'
+                Type: 'StringList'
+            nextStep: adfs1InstanceId
+          - name: adfs1InstanceId
+            action: aws:executeAwsApi
+            onFailure: step:signalfailure
+            inputs:
+              Service: ec2
+              Api: DescribeInstances
+              Filters:
+                - Name: 'tag:Name'
+                  Values: ['{{Adfs1NetBIOSName}}']
+                - Name: 'tag:aws:cloudformation:stack-name'
+                  Values: ['{{StackName}}']
+                - Name: 'instance-state-name'
+                  Values: ['running']
+            outputs:
+              - Name: InstanceId
+                Selector: '$.Reservations[0].Instances[0].InstanceId'
+                Type: 'String'
+            nextStep: adfs2InstanceId
+          - name: adfs2InstanceId
+            action: aws:executeAwsApi
+            onFailure: step:signalfailure
+            inputs:
+              Service: ec2
+              Api: DescribeInstances
+              Filters:
+                - Name: 'tag:Name'
+                  Values: ['{{Adfs2NetBIOSName}}']
+                - Name: 'tag:aws:cloudformation:stack-name'
+                  Values: ['{{StackName}}']
+                - Name: 'instance-state-name'
+                  Values: ['running']
+            outputs:
+              - Name: InstanceId
+                Selector: '$.Reservations[0].Instances[0].InstanceId'
+                Type: 'String'
+            nextStep: wap1InstanceId
+          - name: wap1InstanceId
+            action: aws:executeAwsApi
+            onFailure: step:signalfailure
+            inputs:
+              Service: ec2
+              Api: DescribeInstances
+              Filters:
+                - Name: 'tag:Name'
+                  Values: ['{{Wap1NetBIOSName}}']
+                - Name: 'tag:aws:cloudformation:stack-name'
+                  Values: ['{{StackName}}']
+                - Name: 'instance-state-name'
+                  Values: ['running']
+            outputs:
+              - Name: InstanceId
+                Selector: '$.Reservations[0].Instances[0].InstanceId'
+                Type: 'String'
+            nextStep: wap2InstanceId
+          - name: wap2InstanceId
+            action: aws:executeAwsApi
+            onFailure: step:signalfailure
+            inputs:
+              Service: ec2
+              Api: DescribeInstances
+              Filters:
+                - Name: 'tag:Name'
+                  Values: ['{{Wap2NetBIOSName}}']
+                - Name: 'tag:aws:cloudformation:stack-name'
+                  Values: ['{{StackName}}']
+                - Name: 'instance-state-name'
+                  Values: ['running']
+            outputs:
+              - Name: InstanceId
+                Selector: '$.Reservations[0].Instances[0].InstanceId'
+                Type: 'String'
+            nextStep: intializeInstances
+          - name: intializeInstances
+            action: aws:runCommand
+            inputs:
+              DocumentName: AWS-RunPowerShellScript
+              InstanceIds:
+                - '{{InstanceIds.InstanceIds}}'
+              Parameters:
+                commands: |-
+                  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+                  $S3BucketName = '{{ QSS3BucketName }}'
+                  $S3KeyPrefix = '{{ QSS3KeyPrefix }}'
+
+
+                  $CustomModules = @(
+                      'Module-WAPADFS.psd1',
+                      'Module-WAPADFS.psm1'
+                  )
+
+                  $Modules = @(
+                      @{
+                          Name    = 'NetworkingDsc'
+                          Version = '8.2.0'
+                      },
+                      @{
+                          Name    = 'ComputerManagementDsc'
+                          Version = '8.4.0'
+                      }
+                  )
+
+                  Write-Output 'Creating AWSQuickstart Directory'
+                  Try {
+                      $Null = New-Item -Path 'C:\AWSQuickstart\Module-WAPADFS' -ItemType 'Directory' -ErrorAction Stop
+                  } Catch [System.Exception] {
+                      Write-Output "Failed to create AWSQuickstart directory $_"
+                      Exit 1
+                  }
+
+                  $S3KeyPrefix = $S3KeyPrefix.Substring(0,$S3KeyPrefix.Length -1)
+                  Write-Output 'Downloading ADFS PowerShell Module'
+                  Foreach ($CustomModule in $CustomModules) {
+                      Try {
+                          $Null = Read-S3Object -BucketName $S3BucketName -Key "$($S3KeyPrefix)/scripts/Modules/Module-WAPADFS/$CustomModule" -File "C:\AWSQuickstart\Module-WAPADFS\$CustomModule"
+                      } Catch [System.Exception] {
+                          Write-Output "Failed to read and download $CustomModule.Name from S3 $_"
+                          Exit 1
+                      }
+                  }
+
+                  Write-Output 'Installing NuGet Package Provider'
+                  Try {
+                      $Null = Install-PackageProvider -Name 'NuGet' -MinimumVersion '2.8.5' -Force -ErrorAction Stop
+                  } Catch [System.Exception] {
+                      Write-Output "Failed to install NuGet Package Provider $_"
+                      Exit 1
+                  }
+
+                  Write-Output 'Setting PSGallery Respository to trusted'
+                  Try {
+                      Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted' -ErrorAction Stop
+                  } Catch [System.Exception] {
+                      Write-Output "Failed to set PSGallery Respository to trusted $_"
+                      Exit 1
+                  }
+
+                  Write-Output 'Installing the needed Powershell DSC modules for this Quick Start'
+                  Foreach ($Module in $Modules) {
+                      Try {
+                          Install-Module -Name $Module.Name -RequiredVersion $Module.Version -ErrorAction Stop
+                      } Catch [System.Exception] {
+                          Write-Output "Failed to Import Modules $_"
+                          Exit 1
+                      }
+                  } 
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: 'true'
+                CloudWatchLogGroupName: !Sub '/aws/Quick_Start/${AWS::StackName}'
+            nextStep: configureInstances
+          - name: configureInstances
+            action: aws:runCommand
+            inputs:
+              DocumentName: AWS-RunPowerShellScript
+              InstanceIds:
+                - '{{InstanceIds.InstanceIds}}'
+              Parameters:
+                commands: |-
+                  Try {
+                      Import-Module -Name 'C:\AWSQuickstart\Module-WAPADFS\Module-WAPADFS.psm1' -Force
+                  } Catch [System.Exception] {
+                      Write-Output "Failed to importing WAPADFS PS Module $_"
+                      Exit 1
+                  }
+                  Invoke-PreConfig
+                  Invoke-LcmConfig
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: 'true'
+                CloudWatchLogGroupName: !Sub '/aws/Quick_Start/${AWS::StackName}'
+            nextStep: configureMofs
+          - name: configureMofs
+            action: aws:runCommand
+            inputs:
+              DocumentName: AWS-RunPowerShellScript
+              InstanceIds:
+                - '{{InstanceIds.InstanceIds}}'
+              Parameters:
+                commands: |-
+                  Try {
+                      Import-Module -Name 'C:\AWSQuickstart\Module-WAPADFS\Module-WAPADFS.psm1' -Force
+                  } Catch [System.Exception] {
+                      Write-Output "Failed to importing WAPADFS PS Module $_"
+                      Exit 1
+                  }
+                  $EniConfig = Get-EniConfig
+                  $Secret = Get-SecretInfo -DomainNetBIOSName '{{ DomainNetBIOSName }}' -SecretArn '{{ DomainAdminUserSecret }}'
+                  $InstanceId  = Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/instance-id' -UseBasicParsing | Select-Object -ExpandProperty Content
+                  $NameFromTag = Get-EC2Instance $InstanceId -ErrorAction Stop | Select-Object -ExpandProperty 'Instances' | Select-Object -ExpandProperty 'Tags' | Where-Object {$_.Key -eq 'Name'} | Select-Object -ExpandProperty 'Value'
+                  Set-DscConfiguration -Credentials $Secret.Credentials -DomainController1IP '{{DomainController1IP}}' -DomainController2IP '{{DomainController2IP}}' -DomainDNSName '{{ DomainDNSName }}' -GatewayAddress $EniConfig.GatewayAddress -InstanceNetBIOSName $NameFromTag -IpAddress $EniConfig.IpAddress -MacAddress $EniConfig.MacAddress 
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: 'true'
+                CloudWatchLogGroupName: !Sub '/aws/Quick_Start/${AWS::StackName}'
+            nextStep: runMofs
+          - name: runMofs
+            action: aws:runCommand
+            onFailure: step:signalfailure
+            inputs:
+              DocumentName: AWS-RunPowerShellScript
+              InstanceIds:
+                - '{{InstanceIds.InstanceIds}}'
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: 'true'
+                CloudWatchLogGroupName: !Sub '/aws/Quick_Start/${AWS::StackName}'
+              Parameters:
+                commands:
+                  - |
+                    function DscStatusCheck () {
+                        $LCMState = (Get-DscLocalConfigurationManager).LCMState
+                        if ($LCMState -eq 'PendingConfiguration' -Or $LCMState -eq 'PendingReboot') {
+                            'returning 3010, should continue after reboot'
+                            exit 3010
+                        } else {
+                            'Completed'
+                        }
+                    }
+
+                    Start-DscConfiguration 'C:\AWSQuickstart\ConfigInstance' -Wait -Verbose -Force
+
+                    DscStatusCheck
+            nextStep: InstallAdsf1
+          - name: InstallAdsf1
+            action: aws:runCommand
+            inputs:
+              DocumentName: AWS-RunPowerShellScript
+              InstanceIds:
+                - '{{adfs1InstanceId.InstanceId}}'
+              Parameters:
+                commands: |-
+                  Try {
+                      Import-Module -Name 'C:\AWSQuickstart\Module-WAPADFS\Module-WAPADFS.psm1' -Force
+                  } Catch [System.Exception] {
+                      Write-Output "Failed to importing WAPADFS PS Module $_"
+                      Exit 1
+                  }
+                  $Secret = Get-SecretInfo -DomainNetBIOSName '{{ DomainNetBIOSName }}' -SecretArn '{{ DomainAdminUserSecret }}'
+                  Install-FirstADFS -Credential $Secret.Credentials -DirectoryType '{{ DirectoryType }}' -Password $Secret.UserPassword -Username $Secret.Username 
+                  Start-CleanUp
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: 'true'
+                CloudWatchLogGroupName: !Sub '/aws/Quick_Start/${AWS::StackName}'
+            nextStep: InstallAdsf2
+          - name: InstallAdsf2
+            action: aws:runCommand
+            inputs:
+              DocumentName: AWS-RunPowerShellScript
+              InstanceIds:
+                - '{{adfs2InstanceId.InstanceId}}'
+              Parameters:
+                commands: |-
+                  Try {
+                      Import-Module -Name 'C:\AWSQuickstart\Module-WAPADFS\Module-WAPADFS.psm1' -Force
+                  } Catch [System.Exception] {
+                      Write-Output "Failed to importing WAPADFS PS Module $_"
+                      Exit 1
+                  }
+                  $Secret = Get-SecretInfo -DomainNetBIOSName '{{ DomainNetBIOSName }}' -SecretArn '{{ DomainAdminUserSecret }}'
+                  Install-AdditionalADFS -Credential $Secret.Credentials -DirectoryType '{{ DirectoryType }}' -FirstAdfsServerBIOSName '{{ Adfs1NetBIOSName }}' -Password $Secret.UserPassword
+                  Start-CleanUp
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: 'true'
+                CloudWatchLogGroupName: !Sub '/aws/Quick_Start/${AWS::StackName}'
+            nextStep: InstallWap
+          - name: InstallWap
+            action: aws:runCommand
+            inputs:
+              DocumentName: AWS-RunPowerShellScript
+              InstanceIds:
+                - '{{wap1InstanceId.InstanceId}}'
+                - '{{wap2InstanceId.InstanceId}}'
+              Parameters:
+                commands: |-
+                  Try {
+                      Import-Module -Name 'C:\AWSQuickstart\Module-WAPADFS\Module-WAPADFS.psm1' -Force
+                  } Catch [System.Exception] {
+                      Write-Output "Failed to importing WAPADFS PS Module $_"
+                      Exit 1
+                  }
+                  $Secret = Get-SecretInfo -DomainNetBIOSName '{{ DomainNetBIOSName }}' -SecretArn '{{ DomainAdminUserSecret }}'
+                  Install-WAP -Credential $Secret.Credentials -FirstAdfsServerBIOSName '{{ Adfs1NetBIOSName }}' -Password $Secret.UserPassword
+                  Start-CleanUp
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: 'true'
+                CloudWatchLogGroupName: !Sub '/aws/Quick_Start/${AWS::StackName}'
+            nextStep: CFNSignalEnd
+          - name: CFNSignalEnd
+            action: aws:branch
+            inputs:
+              Choices:
+                - NextStep: signalsuccess
+                  Not:
+                    Variable: '{{StackName}}'
+                    StringEquals: ''
+                - NextStep: sleepend
+                  Variable: '{{StackName}}'
+                  StringEquals: ''
+          - name: signalsuccess
+            action: aws:executeAwsApi
+            isEnd: True
+            inputs:
+              Service: cloudformation
+              Api: SignalResource
+              LogicalResourceId: 'ADFS2'
+              StackName: '{{StackName}}'
+              Status: SUCCESS
+              UniqueId: '{{adfs2InstanceId.InstanceId}}'
+          - name: sleepend
+            action: aws:sleep
+            isEnd: True
+            inputs:
+              Duration: PT1S
+          - name: signalfailure
+            action: aws:executeAwsApi
+            inputs:
+              Service: cloudformation
+              Api: SignalResource
+              LogicalResourceId: 'ADFS2'
+              StackName: '{{StackName}}'
+              Status: FAILURE
+              UniqueId: '{{adfs2InstanceId.InstanceId}}'
   WAP1:
     Type: AWS::EC2::Instance
-    DependsOn: ADFS1WaitCondition
-    Metadata:
-      AWS::CloudFormation::Authentication:
-        S3AccessCreds:
-          type: S3
-          roleName: !Ref 'WAPRole'
-          buckets: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-      AWS::CloudFormation::Init:
-        configSets:
-          config:
-            - setup
-            - prep
-        setup:
-          files:
-            C:\cfn\cfn-hup.conf:
-              content: !Join
-                - ''
-                - - "[main]\n"
-                  - stack=
-                  - !Ref 'AWS::StackId'
-                  - "\n"
-                  - region=
-                  - !Ref 'AWS::Region'
-                  - "\n"
-            C:\cfn\hooks.d\cfn-auto-reloader.conf:
-              content: !Join
-                - ''
-                - - "[cfn-auto-reloader-hook]\n"
-                  - "triggers=post.update\n"
-                  - "path=Resources.WAP1.Metadata.AWS::CloudFormation::Init\n"
-                  - 'action=cfn-init.exe -v -s '
-                  - !Ref 'AWS::StackId'
-                  - ' -r WAP1'
-                  - ' --region '
-                  - !Ref 'AWS::Region'
-                  - "\n"
-            C:\cfn\scripts\Unzip-Archive.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\modules\AWSQuickStart.zip:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Join-Domain.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Disable-CredSSP.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Enable-CredSSP.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Install-WAP.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/Install-WAP.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-          commands:
-            a-set-execution-policy:
-              command: powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"
-              waitAfterCompletion: '0'
-            b-unpack-quickstart-module:
-              command: powershell.exe -Command C:\cfn\scripts\Unzip-Archive.ps1 -Source
-                C:\cfn\modules\AWSQuickStart.zip -Destination C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
-              waitAfterCompletion: '0'
-            c-init-quickstart-module:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "
-                  - New-AWSQuickStartWaitHandle -Handle '
-                  - !Ref 'WAP1WaitHandle'
-                  - '''"'
-              waitAfterCompletion: '0'
-          services:
-            windows:
-              cfn-hup:
-                enabled: 'true'
-                ensureRunning: 'true'
-                files:
-                  - C:\cfn\cfn-hup.conf
-                  - C:\cfn\hooks.d\cfn-auto-reloader.conf
-        prep:
-          commands:
-            a-disable-win-fw:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "Get-NetFirewallProfile | Set-NetFirewallProfile
-                    -Enabled False"
-              waitAfterCompletion: '0'
-            b-rename-computer:
-              command: powershell.exe -Command "Rename-Computer -NewName 'WAP1' -Restart"
-              waitAfterCompletion: forever
-            c-join-domain:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "C:\cfn\scripts\Join-Domain.ps1 -DomainName
-                    '
-                  - !Ref 'DomainDNSName'
-                  - ''' -UserName '''
-                  - !Ref 'DomainNetBIOSName'
-                  - \
-                  - !Ref 'DomainAdminUser'
-                  - ''' -Password '''
-                  - !Ref 'DomainAdminPassword'
-                  - '''"'
-              waitAfterCompletion: forever
-            d-enable-credssp:
-              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Enable-CredSSP.ps1
-              waitAfterCompletion: '0'
-            e-install-wap:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "C:\cfn\scripts\Install-WAP.ps1 -DomainDNSName
-                    '
-                  - !Ref 'DomainDNSName'
-                  - ''' -DomainNetBIOSName '''
-                  - !Ref 'DomainNetBIOSName'
-                  - ''' -UserName '''
-                  - !Ref 'DomainAdminUser'
-                  - ''' -Password '''
-                  - !Ref 'DomainAdminPassword'
-                  - '''"'
-              waitAfterCompletion: '0'
-            f-disable-credssp:
-              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Disable-CredSSP.ps1"
-              waitAfterCompletion: '0'
-            g-signal-success:
-              command: powershell -Command "Write-AWSQuickStartStatus"
-              waitAfterCompletion: '0'
     Properties:
       ImageId: !Ref 'LatestAmiId'
-      IamInstanceProfile: !Ref 'WAPProfile'
+      IamInstanceProfile: !Ref 'ServerProfile'
       InstanceType: !Ref 'WAPADFSInstanceType'
-      SecurityGroupIds:
-        - !Ref 'WAPSecurityGroup'
-        - !Ref 'DomainMemberSGID'
       SubnetId: !Ref 'PublicSubnet1ID'
       Tags:
         - Key: Name
-          Value: WAP1
+          Value: !Ref 'Wap1NetBIOSName'
+        - Key: Domain
+          Value: !Ref 'DomainDNSName'
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: 100
+            VolumeSize: 60
             VolumeType: gp3
-        - DeviceName: /dev/xvdb
-          VirtualName: ephemeral0
-      KeyName: !Ref 'KeyPairName'
-      UserData: !Base64
-        Fn::Join:
-          - ''
-          - - "<script>\n"
-            - 'cfn-init.exe -v -c config -s '
-            - !Ref 'AWS::StackId'
-            - ' -r WAP1 '
-            - ' --region '
-            - !Ref 'AWS::Region'
-            - "\n"
-            - </script>
-  WAP2:
-    Type: AWS::EC2::Instance
-    DependsOn: ADFS1WaitCondition
-    Metadata:
-      AWS::CloudFormation::Authentication:
-        S3AccessCreds:
-          type: S3
-          roleName: !Ref 'WAPRole'
-          buckets: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-      AWS::CloudFormation::Init:
-        configSets:
-          config:
-            - setup
-            - prep
-        setup:
-          files:
-            C:\cfn\cfn-hup.conf:
-              content: !Join
-                - ''
-                - - "[main]\n"
-                  - stack=
-                  - !Ref 'AWS::StackId'
-                  - "\n"
-                  - region=
-                  - !Ref 'AWS::Region'
-                  - "\n"
-            C:\cfn\hooks.d\cfn-auto-reloader.conf:
-              content: !Join
-                - ''
-                - - "[cfn-auto-reloader-hook]\n"
-                  - "triggers=post.update\n"
-                  - "path=Resources.WAP2.Metadata.AWS::CloudFormation::Init\n"
-                  - 'action=cfn-init.exe -v -s '
-                  - !Ref 'AWS::StackId'
-                  - ' -r WAP2'
-                  - ' --region '
-                  - !Ref 'AWS::Region'
-                  - "\n"
-            C:\cfn\scripts\Unzip-Archive.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\modules\AWSQuickStart.zip:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Join-Domain.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Disable-CredSSP.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Enable-CredSSP.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Install-WAP.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/Install-WAP.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-          commands:
-            a-set-execution-policy:
-              command: powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"
-              waitAfterCompletion: '0'
-            b-unpack-quickstart-module:
-              command: powershell.exe -Command C:\cfn\scripts\Unzip-Archive.ps1 -Source
-                C:\cfn\modules\AWSQuickStart.zip -Destination C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
-              waitAfterCompletion: '0'
-            c-init-quickstart-module:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "
-                  - New-AWSQuickStartWaitHandle -Handle '
-                  - !Ref 'WAP2WaitHandle'
-                  - '''"'
-              waitAfterCompletion: '0'
-          services:
-            windows:
-              cfn-hup:
-                enabled: 'true'
-                ensureRunning: 'true'
-                files:
-                  - C:\cfn\cfn-hup.conf
-                  - C:\cfn\hooks.d\cfn-auto-reloader.conf
-        prep:
-          commands:
-            a-disable-win-fw:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "Get-NetFirewallProfile | Set-NetFirewallProfile
-                    -Enabled False"
-              waitAfterCompletion: '0'
-            b-rename-computer:
-              command: powershell.exe -Command "Rename-Computer -NewName 'WAP2' -Restart"
-              waitAfterCompletion: forever
-            c-join-domain:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "C:\cfn\scripts\Join-Domain.ps1 -DomainName
-                    '
-                  - !Ref 'DomainDNSName'
-                  - ''' -UserName '''
-                  - !Ref 'DomainNetBIOSName'
-                  - \
-                  - !Ref 'DomainAdminUser'
-                  - ''' -Password '''
-                  - !Ref 'DomainAdminPassword'
-                  - '''"'
-              waitAfterCompletion: forever
-            d-enable-credssp:
-              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Enable-CredSSP.ps1
-              waitAfterCompletion: '0'
-            e-install-wap:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "C:\cfn\scripts\Install-WAP.ps1 -DomainDNSName
-                    '
-                  - !Ref 'DomainDNSName'
-                  - ''' -DomainNetBIOSName '''
-                  - !Ref 'DomainNetBIOSName'
-                  - ''' -UserName '''
-                  - !Ref 'DomainAdminUser'
-                  - ''' -Password '''
-                  - !Ref 'DomainAdminPassword'
-                  - '''"'
-              waitAfterCompletion: '0'
-            f-disable-credssp:
-              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Disable-CredSSP.ps1"
-              waitAfterCompletion: '0'
-            g-signal-success:
-              command: powershell -Command "Write-AWSQuickStartStatus"
-              waitAfterCompletion: '0'
-    Properties:
-      ImageId: !Ref 'LatestAmiId'
-      IamInstanceProfile: !Ref 'WAPProfile'
-      InstanceType: !Ref 'WAPADFSInstanceType'
+            Encrypted: true
+            DeleteOnTermination: true
       SecurityGroupIds:
         - !Ref 'WAPSecurityGroup'
         - !Ref 'DomainMemberSGID'
+      KeyName: !Ref 'KeyPairName'
+  WAP2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref 'LatestAmiId'
+      IamInstanceProfile: !Ref 'ServerProfile'
+      InstanceType: !Ref 'WAPADFSInstanceType'
       SubnetId: !Ref 'PublicSubnet2ID'
       Tags:
         - Key: Name
-          Value: WAP2
+          Value: !Ref 'Wap2NetBIOSName'
+        - Key: Domain
+          Value: !Ref 'DomainDNSName'
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: 100
+            VolumeSize: 60
             VolumeType: gp3
-        - DeviceName: /dev/xvdb
-          VirtualName: ephemeral0
+            Encrypted: true
+            DeleteOnTermination: true
+      SecurityGroupIds:
+        - !Ref 'WAPSecurityGroup'
+        - !Ref 'DomainMemberSGID'
       KeyName: !Ref 'KeyPairName'
-      UserData: !Base64
-        Fn::Join:
-          - ''
-          - - "<script>\n"
-            - 'cfn-init.exe -v -c config -s '
-            - !Ref 'AWS::StackId'
-            - ' -r WAP2 '
-            - ' --region '
-            - !Ref 'AWS::Region'
-            - "\n"
-            - </script>
   ADFS1:
     Type: AWS::EC2::Instance
-    Metadata:
-      AWS::CloudFormation::Authentication:
-        S3AccessCreds:
-          type: S3
-          roleName: !Ref 'ADFSRole'
-          buckets: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-      AWS::CloudFormation::Init:
-        configSets:
-          config:
-            - setup
-            - install
-        setup:
-          files:
-            C:\cfn\cfn-hup.conf:
-              content: !Join
-                - ''
-                - - "[main]\n"
-                  - stack=
-                  - !Ref 'AWS::StackId'
-                  - "\n"
-                  - region=
-                  - !Ref 'AWS::Region'
-                  - "\n"
-            C:\cfn\hooks.d\cfn-auto-reloader.conf:
-              content: !Join
-                - ''
-                - - "[cfn-auto-reloader-hook]\n"
-                  - "triggers=post.update\n"
-                  - "path=Resources.ADFS1.Metadata.AWS::CloudFormation::Init\n"
-                  - 'action=cfn-init.exe -v -s '
-                  - !Ref 'AWS::StackId'
-                  - ' -r ADFS1'
-                  - ' --region '
-                  - !Ref 'AWS::Region'
-                  - "\n"
-            C:\cfn\scripts\Unzip-Archive.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\modules\AWSQuickStart.zip:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Join-Domain.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Create-Share.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Create-Share.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Disable-CredSSP.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Enable-CredSSP.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Install-ADFS.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/Install-ADFS.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-          commands:
-            a-set-execution-policy:
-              command: powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"
-              waitAfterCompletion: '0'
-            b-unpack-quickstart-module:
-              command: powershell.exe -Command C:\cfn\scripts\Unzip-Archive.ps1 -Source
-                C:\cfn\modules\AWSQuickStart.zip -Destination C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
-              waitAfterCompletion: '0'
-            c-init-quickstart-module:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "
-                  - New-AWSQuickStartWaitHandle -Handle '
-                  - !Ref 'ADFS1WaitHandle'
-                  - '''"'
-              waitAfterCompletion: '0'
-          services:
-            windows:
-              cfn-hup:
-                enabled: 'true'
-                ensureRunning: 'true'
-                files:
-                  - C:\cfn\cfn-hup.conf
-                  - C:\cfn\hooks.d\cfn-auto-reloader.conf
-        install:
-          commands:
-            a-disable-win-fw:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "Get-NetFirewallProfile | Set-NetFirewallProfile
-                    -Enabled False"
-              waitAfterCompletion: '0'
-            b-rename-computer:
-              command: powershell.exe -Command "Rename-Computer -NewName 'ADFS1' -Restart"
-              waitAfterCompletion: forever
-            c-join-domain:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "C:\cfn\scripts\Join-Domain.ps1 -DomainName
-                    '
-                  - !Ref 'DomainDNSName'
-                  - ''' -UserName '''
-                  - !Ref 'DomainNetBIOSName'
-                  - \
-                  - !Ref 'DomainAdminUser'
-                  - ''' -Password '''
-                  - !Ref 'DomainAdminPassword'
-                  - '''"'
-              waitAfterCompletion: forever
-            d-create-cert-share:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "C:\cfn\scripts\Create-Share.ps1
-                  - ' -Path ''c:\cert'''
-                  - ' -ShareName ''cert'''
-                  - ' -FolderPath ''c:\'''
-                  - ' -FolderName ''cert'''
-                  - ' -DomainNetBIOSName '''
-                  - !Ref 'DomainNetBIOSName'
-                  - ''' -DomainAdminUser '''
-                  - !Ref 'DomainAdminUser'
-                  - ''' -DomainAdminPassword '''
-                  - !Ref 'DomainAdminPassword'
-                  - ''' -FullAccessUser '''
-                  - !Ref 'DomainNetBIOSName'
-                  - \
-                  - !Ref 'DomainAdminUser'
-                  - '''"'
-              waitAfterCompletion: '0'
-            e-enable-credssp:
-              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Enable-CredSSP.ps1
-              waitAfterCompletion: '0'
-            f-install-adfs:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "C:\cfn\scripts\Install-ADFS.ps1 -DomainDNSName
-                    '
-                  - !Ref 'DomainDNSName'
-                  - ''' -DomainNetBIOSName '''
-                  - !Ref 'DomainNetBIOSName'
-                  - ''' -UserName '''
-                  - !Ref 'DomainAdminUser'
-                  - ''' -Password '''
-                  - !Ref 'DomainAdminPassword'
-                  - ''' -FirstServer"'
-              waitAfterCompletion: '0'
-            g-disable-credssp:
-              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Disable-CredSSP.ps1"
-              waitAfterCompletion: '0'
-            h-signal-success:
-              command: powershell -Command "Write-AWSQuickStartStatus"
-              waitAfterCompletion: '0'
     Properties:
       ImageId: !Ref 'LatestAmiId'
-      IamInstanceProfile: !Ref 'ADFSProfile'
+      IamInstanceProfile: !Ref 'ServerProfile'
       InstanceType: !Ref 'WAPADFSInstanceType'
-      NetworkInterfaces:
-        - DeleteOnTermination: True
-          DeviceIndex: '0'
-          SubnetId: !Ref 'PrivateSubnet1ID'
-          GroupSet:
-            - !Ref 'DomainMemberSGID'
-            - !Ref 'ADFSSecurityGroup'
+      SubnetId: !Ref 'PrivateSubnet1ID'
       Tags:
         - Key: Name
-          Value: ADFS1
+          Value: !Ref 'Adfs1NetBIOSName'
+        - Key: Domain
+          Value: !Ref 'DomainDNSName'
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: 100
+            VolumeSize: 60
             VolumeType: gp3
-        - DeviceName: /dev/xvdb
-          VirtualName: ephemeral0
+            Encrypted: true
+            DeleteOnTermination: true
+      SecurityGroupIds:
+        - !Ref 'ADFSSecurityGroup'
+        - !Ref 'DomainMemberSGID'
       KeyName: !Ref 'KeyPairName'
-      UserData: !Base64
-        Fn::Join:
-          - ''
-          - - "<script>\n"
-            - 'cfn-init.exe -v -c config -s '
-            - !Ref 'AWS::StackId'
-            - ' -r ADFS1 '
-            - ' --region '
-            - !Ref 'AWS::Region'
-            - "\n"
-            - </script>
   ADFS2:
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT60M
+        Count: 1
+    DependsOn: 
+      - ADFS1
+      - WAP1
+      - WAP2
     Type: AWS::EC2::Instance
-    DependsOn: ADFS1WaitCondition
-    Metadata:
-      AWS::CloudFormation::Authentication:
-        S3AccessCreds:
-          type: S3
-          roleName: !Ref 'ADFSRole'
-          buckets: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-      AWS::CloudFormation::Init:
-        configSets:
-          config:
-            - setup
-            - install
-        setup:
-          files:
-            C:\cfn\cfn-hup.conf:
-              content: !Join
-                - ''
-                - - "[main]\n"
-                  - stack=
-                  - !Ref 'AWS::StackId'
-                  - "\n"
-                  - region=
-                  - !Ref 'AWS::Region'
-                  - "\n"
-            C:\cfn\hooks.d\cfn-auto-reloader.conf:
-              content: !Join
-                - ''
-                - - "[cfn-auto-reloader-hook]\n"
-                  - "triggers=post.update\n"
-                  - "path=Resources.ADFS2.Metadata.AWS::CloudFormation::Init\n"
-                  - 'action=cfn-init.exe -v -s '
-                  - !Ref 'AWS::StackId'
-                  - ' -r ADFS2'
-                  - ' --region '
-                  - !Ref 'AWS::Region'
-                  - "\n"
-            C:\cfn\scripts\Unzip-Archive.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\modules\AWSQuickStart.zip:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Join-Domain.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Disable-CredSSP.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Disable-CredSSP.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Enable-CredSSP.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Enable-CredSSP.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Install-ADFS.ps1:
-              source: !Sub
-                - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/Install-ADFS.ps1
-                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-              authentication: S3AccessCreds
-          commands:
-            a-set-execution-policy:
-              command: powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"
-              waitAfterCompletion: '0'
-            b-unpack-quickstart-module:
-              command: powershell.exe -Command C:\cfn\scripts\Unzip-Archive.ps1 -Source
-                C:\cfn\modules\AWSQuickStart.zip -Destination C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
-              waitAfterCompletion: '0'
-            c-init-quickstart-module:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "
-                  - New-AWSQuickStartWaitHandle -Handle '
-                  - !Ref 'ADFS2WaitHandle'
-                  - '''"'
-              waitAfterCompletion: '0'
-          services:
-            windows:
-              cfn-hup:
-                enabled: 'true'
-                ensureRunning: 'true'
-                files:
-                  - C:\cfn\cfn-hup.conf
-                  - C:\cfn\hooks.d\cfn-auto-reloader.conf
-        install:
-          commands:
-            a-disable-win-fw:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "Get-NetFirewallProfile | Set-NetFirewallProfile
-                    -Enabled False"
-              waitAfterCompletion: '0'
-            b-rename-computer:
-              command: powershell.exe -Command "Rename-Computer -NewName 'ADFS2' -Restart"
-              waitAfterCompletion: forever
-            c-join-domain:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "C:\cfn\scripts\Join-Domain.ps1 -DomainName
-                    '
-                  - !Ref 'DomainDNSName'
-                  - ''' -UserName '''
-                  - !Ref 'DomainNetBIOSName'
-                  - \
-                  - !Ref 'DomainAdminUser'
-                  - ''' -Password '''
-                  - !Ref 'DomainAdminPassword'
-                  - '''"'
-              waitAfterCompletion: forever
-            d-enable-credssp:
-              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Enable-CredSSP.ps1
-              waitAfterCompletion: '0'
-            e-install-adfs:
-              command: !Join
-                - ''
-                - - powershell.exe -Command "C:\cfn\scripts\Install-ADFS.ps1 -DomainDNSName
-                    '
-                  - !Ref 'DomainDNSName'
-                  - ''' -DomainNetBIOSName '''
-                  - !Ref 'DomainNetBIOSName'
-                  - ''' -UserName '''
-                  - !Ref 'DomainAdminUser'
-                  - ''' -Password '''
-                  - !Ref 'DomainAdminPassword'
-                  - '''"'
-              waitAfterCompletion: '0'
-            f-disable-credssp:
-              command: powershell.exe -ExecutionPolicy RemoteSigned -Command "C:\cfn\scripts\Disable-CredSSP.ps1"
-              waitAfterCompletion: '0'
-            g-signal-success:
-              command: powershell -Command "Write-AWSQuickStartStatus"
-              waitAfterCompletion: '0'
     Properties:
       ImageId: !Ref 'LatestAmiId'
-      IamInstanceProfile: !Ref 'ADFSProfile'
+      IamInstanceProfile: !Ref 'ServerProfile'
       InstanceType: !Ref 'WAPADFSInstanceType'
-      NetworkInterfaces:
-        - DeleteOnTermination: True
-          DeviceIndex: '0'
-          SubnetId: !Ref 'PrivateSubnet2ID'
-          GroupSet:
-            - !Ref 'DomainMemberSGID'
-            - !Ref 'ADFSSecurityGroup'
+      SubnetId: !Ref 'PrivateSubnet2ID'
       Tags:
         - Key: Name
-          Value: ADFS2
+          Value: !Ref 'Adfs2NetBIOSName'
+        - Key: Domain
+          Value: !Ref 'DomainDNSName'
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: 100
+            VolumeSize: 60
             VolumeType: gp3
-        - DeviceName: /dev/xvdb
-          VirtualName: ephemeral0
+            Encrypted: true
+            DeleteOnTermination: true
+      SecurityGroupIds:
+        - !Ref 'ADFSSecurityGroup'
+        - !Ref 'DomainMemberSGID'
       KeyName: !Ref 'KeyPairName'
       UserData: !Base64
         Fn::Join:
           - ''
-          - - "<script>\n"
-            - 'cfn-init.exe -v -c config -s '
-            - !Ref 'AWS::StackId'
-            - ' -r ADFS2 '
-            - ' --region '
-            - !Ref 'AWS::Region'
+          - - "<powershell>\n"
+            - 'Start-SSMAutomationExecution -DocumentName '
+            - !Sub '"${WapAdfsAutomationDoc}"'
+            - ' -Parameter @{'
+            - '"Adfs1NetBIOSName"='
+            - !Sub '"${Adfs1NetBIOSName}"'
+            - ';"Adfs2NetBIOSName"='
+            - !Sub '"${Adfs2NetBIOSName}"'
+            - ';"DirectoryType"='
+            - !Sub '"${DirectoryType}"'
+            - ';"DomainAdminUserSecret"='
+            - !Sub '"${DomainAdminUserSecret}"'
+            - ';"DomainController1IP"='
+            - !Sub '"${DomainController1IP}"'
+            - ';"DomainController2IP"='
+            - !Sub '"${DomainController2IP}"'
+            - ';"DomainDNSName"='
+            - !Sub '"${DomainDNSName}"'
+            - ';"DomainNetBIOSName"='
+            - !Sub '"${DomainNetBIOSName}"'
+            - ';"Wap1NetBIOSName"='
+            - !Sub '"${Wap1NetBIOSName}"'
+            - ';"Wap2NetBIOSName"='
+            - !Sub '"${Wap2NetBIOSName}"'
+            - ';"QSS3BucketName"='
+            - !If [UsingDefaultBucket, !Sub '"${QSS3BucketName}-${AWS::Region}"', !Sub '"${QSS3BucketName}"']
+            - ';"QSS3BucketRegion"='
+            - !If [UsingDefaultBucket, !Sub '"${AWS::Region}"', !Sub '"${QSS3BucketRegion}"']
+            - ';"QSS3KeyPrefix"='
+            - !Sub '"${QSS3KeyPrefix}"'
+            - ';"StackName"='
+            - !Sub '"${AWS::StackName}"'
+            - ';"URLSuffix"='
+            - !Sub '"${AWS::URLSuffix}"'
+            - '}'
             - "\n"
-            - </script>
-  WAP1WaitCondition:
-    Type: AWS::CloudFormation::WaitCondition
-    DependsOn: WAP1
-    Properties:
-      Handle: !Ref 'WAP1WaitHandle'
-      Timeout: '3600'
-  WAP1WaitHandle:
-    Type: AWS::CloudFormation::WaitConditionHandle
-  WAP2WaitCondition:
-    Type: AWS::CloudFormation::WaitCondition
-    DependsOn: WAP2
-    Properties:
-      Handle: !Ref 'WAP2WaitHandle'
-      Timeout: '3600'
-  WAP2WaitHandle:
-    Type: AWS::CloudFormation::WaitConditionHandle
-  ADFS1WaitCondition:
-    Type: AWS::CloudFormation::WaitCondition
-    DependsOn: ADFS1
-    Properties:
-      Handle: !Ref 'ADFS1WaitHandle'
-      Timeout: '3600'
-  ADFS1WaitHandle:
-    Type: AWS::CloudFormation::WaitConditionHandle
-  ADFS2WaitCondition:
-    Type: AWS::CloudFormation::WaitCondition
-    DependsOn: ADFS2
-    Properties:
-      Handle: !Ref 'ADFS2WaitHandle'
-      Timeout: '3600'
-  ADFS2WaitHandle:
-    Type: AWS::CloudFormation::WaitConditionHandle
+            - "</powershell>\n"
   WAPSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -1036,6 +870,9 @@ Resources:
           FromPort: 3389
           ToPort: 3389
           SourceSecurityGroupId: !Ref 'DomainMemberSGID'
+      Tags:
+        - Key: Name
+          Value: WAPSecurityGroup
   ADFSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -1058,3 +895,6 @@ Resources:
           FromPort: 3389
           ToPort: 3389
           SourceSecurityGroupId: !Ref 'DomainMemberSGID'
+      Tags:
+        - Key: Name
+          Value: ADFSSecurityGroup
