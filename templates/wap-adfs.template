@@ -13,7 +13,7 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: Network Configuration
+          default: Network configuration
         Parameters:
           - VPCCIDR
           - VPCID
@@ -22,13 +22,12 @@ Metadata:
           - PublicSubnet1ID
           - PublicSubnet2ID
       - Label:
-          default: Amazon EC2 Configuration
+          default: Amazon EC2 configuration
         Parameters:
           - KeyPairName
-          - InstanceType
           - LatestAmiId
       - Label:
-          default: Microsoft Active Directory Domain Services Configuration
+          default: Microsoft Active Directory Domain Services configuration
         Parameters:
           - DirectoryType
           - DomainController1IP
@@ -38,7 +37,7 @@ Metadata:
           - DomainAdminUserSecret
           - DomainMemberSGID
       - Label:
-          default: ADFS and WAP Configuration
+          default: ADFS and WAP configuration
         Parameters:
           - WAPADFSInstanceType
           - Adfs1NetBIOSName
@@ -46,58 +45,58 @@ Metadata:
           - Wap1NetBIOSName
           - Wap2NetBIOSName
       - Label:
-          default: AWS Quick Start Configuration
+          default: AWS Quick Start configuration
         Parameters:
           - QSS3BucketName
           - QSS3BucketRegion
           - QSS3KeyPrefix
     ParameterLabels:
       Adfs1NetBIOSName:
-        default: ADFS Server 1 NetBIOS Name
+        default: ADFS server 1 NetBIOS name
       Adfs2NetBIOSName:
-        default: ADFS Server 2 NetBIOS Name
+        default: ADFS server 2 NetBIOS name
       Wap1NetBIOSName:
-        default: WAP Server 1 NetBIOS Name
+        default: WAP server 1 NetBIOS name
       Wap2NetBIOSName:
-        default: WAP Server 2 NetBIOS Name
+        default: WAP server 2 NetBIOS name
       DirectoryType:
-        default: Active Directory Domain Services Type
+        default: Active Directory Domain Services type
       DomainController1IP:
-        default: IP the Instance will be used for DNS (Must be accessible)
+        default: IP the instances will use for DNS (must be accessible)
       DomainController2IP:
-        default: IP the Instance will be used for DNS (Must be accessible)    
+        default: IP the instances will use for DNS (must be accessible)    
       DomainAdminUserSecret:
-        default: Secret ARN Containing Administrator Credentials
+        default: Secret ARN containing Administrator credentials
       DomainDNSName:
-        default: Domain DNS Name
+        default: Domain DNS name
       DomainMemberSGID:
-        default: Domain Member Security Group ID
+        default: Domain member security group ID
       DomainNetBIOSName:
-        default: Domain NetBIOS Name
+        default: Domain NetBIOS name
       KeyPairName:
-        default: Key Pair Name
+        default: Key pair name
       LatestAmiId:
-        default: SSM Parameter to for Latest AMI ID
+        default: SSM parameter to for latest AMI ID
       PrivateSubnet1ID:
-        default: Private Subnet 1 ID
+        default: Private subnet 1 ID
       PrivateSubnet2ID:
-        default: Private Subnet 2 ID
+        default: Private subnet 2 ID
       PublicSubnet1ID:
-        default: Public Subnet 1 ID
+        default: Public subnet 1 ID
       PublicSubnet2ID:
-        default: Public Subnet 2 ID
+        default: Public subnet 2 ID
       QSS3BucketName:
-        default: Quick Start S3 Bucket Name
+        default: Quick Start S3 bucket name
       QSS3BucketRegion:
-        default: Quick Start S3 bucket region
+        default: Quick Start S3 bucket Region
       QSS3KeyPrefix:
-        default: Quick Start S3 Key Prefix
+        default: Quick Start S3 key prefix
       VPCCIDR:
         default: VPC CIDR
       VPCID:
         default: VPC ID
       WAPADFSInstanceType:
-        default: WAP and ADFS Server Instance Type
+        default: WAP and ADFS server instance type
 Parameters:
   Adfs1NetBIOSName:
     Default: ADFS1
@@ -115,7 +114,7 @@ Parameters:
     Description: Type of Active Directory the WAP / ADFS deployment will be integrated with, AWS Managed Microsoft AD or Self Managed AD
     Type: String
   DomainAdminUserSecret:
-    Default: arn:aws:secretsmanager:us-west-2:820097935833:secret:DefaultCreds-IsuSDO
+    Default: arn:${AWS::Partition}:secretsmanager:us-west-2:820097935833:secret:DefaultCreds-IsuSDO
     Description: ARN for the Administrator credentials Secret with "username" and "password" key pairs. This account must be a member of Domain Admins with Self Managed directories or a member of AWS Delegated Administrators with AWS Managed Microsoft AD.
     Type: String
   DomainController1IP:
@@ -232,14 +231,14 @@ Resources:
               - Effect: Allow
                 Action: s3:GetObject
                 Resource:
-                  - !Sub arn:aws:s3:::aws-ssm-${AWS::Region}/*
-                  - !Sub arn:aws:s3:::aws-windows-downloads-${AWS::Region}/*
-                  - !Sub arn:aws:s3:::amazon-ssm-${AWS::Region}/*
-                  - !Sub arn:aws:s3:::amazon-ssm-packages-${AWS::Region}/*
-                  - !Sub arn:aws:s3:::${AWS::Region}-birdwatcher-prod/*
-                  - !Sub arn:aws:s3:::patch-baseline-snapshot-${AWS::Region}/*
-                  - !Sub arn:aws:s3:::aws-ssm-distributor-file-${AWS::Region}/*
-                  - !Sub arn:aws:s3:::aws-ssm-document-attachments-${AWS::Region}/*
+                  - !Sub arn:${AWS::Partition}:s3:::aws-ssm-${AWS::Region}/*
+                  - !Sub arn:${AWS::Partition}:s3:::aws-windows-downloads-${AWS::Region}/*
+                  - !Sub arn:${AWS::Partition}:s3:::amazon-ssm-${AWS::Region}/*
+                  - !Sub arn:${AWS::Partition}:s3:::amazon-ssm-packages-${AWS::Region}/*
+                  - !Sub arn:${AWS::Partition}:s3:::${AWS::Region}-birdwatcher-prod/*
+                  - !Sub arn:${AWS::Partition}:s3:::patch-baseline-snapshot-${AWS::Region}/*
+                  - !Sub arn:${AWS::Partition}:s3:::aws-ssm-distributor-file-${AWS::Region}/*
+                  - !Sub arn:${AWS::Partition}:s3:::aws-ssm-document-attachments-${AWS::Region}/*
           PolicyName: SSMAgent
         - PolicyDocument:
             Version: '2012-10-17'
