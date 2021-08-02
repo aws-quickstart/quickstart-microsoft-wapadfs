@@ -31,6 +31,7 @@ Metadata:
         Parameters:
           - KeyPairName
           - LatestAmiId
+          - EbsEncryptionKmsKeyId
       - Label:
           default: Microsoft Active Directory Domain Services configuration
         Parameters:
@@ -78,6 +79,8 @@ Metadata:
         default: Domain member security group ID
       DomainNetBIOSName:
         default: Domain NetBIOS name
+      EbsEncryptionKmsKeyId:
+        default: KMS Key for EBS Encryption
       KeyPairName:
         default: Key pair name
       LatestAmiId:
@@ -119,7 +122,6 @@ Parameters:
     Description: Type of Active Directory the WAP / ADFS deployment will be integrated with, AWS Managed Microsoft AD or Self Managed AD
     Type: String
   DomainAdminUserSecret:
-    Default: arn:${AWS::Partition}:secretsmanager:us-west-2:820097935833:secret:DefaultCreds-IsuSDO
     Description: ARN for the Administrator credentials Secret with "username" and "password" key pairs. This account must be a member of Domain Admins with Self Managed directories or a member of AWS Delegated Administrators with AWS Managed Microsoft AD.
     Type: String
   DomainController1IP:
@@ -148,6 +150,10 @@ Parameters:
     Description: NetBIOS name of the domain the WAP / ADFS instances will join (up to 15 characters) for users of earlier versions of Windows e.g. CORP
     MaxLength: '15'
     MinLength: '1'
+    Type: String
+  EbsEncryptionKmsKeyId:
+    Default: alias/aws/ebs
+    Description: The identifier of the AWS KMS key to use for Amazon EBS encryption. You can specify the KMS key using any of the following; Key ID, Key alias, Key ARN, Alias ARN
     Type: String
   KeyPairName:
     Description: Public/private key pairs allow you to securely connect to your instance after it launches
@@ -483,7 +489,7 @@ Resources:
 
                   $S3BucketName = '{{ QSS3BucketName }}'
                   $S3KeyPrefix = '{{ QSS3KeyPrefix }}'
-
+                  $S3BucketRegion = '{{QSS3BucketRegion}}'
 
                   $CustomModules = @(
                       'Module-WAPADFS.psd1',
@@ -513,7 +519,7 @@ Resources:
                   Write-Output 'Downloading ADFS PowerShell Module'
                   Foreach ($CustomModule in $CustomModules) {
                       Try {
-                          $Null = Read-S3Object -BucketName $S3BucketName -Key "$($S3KeyPrefix)/scripts/Modules/Module-WAPADFS/$CustomModule" -File "C:\AWSQuickstart\Module-WAPADFS\$CustomModule"
+                          $Null = Read-S3Object -BucketName $S3BucketName -Key "$($S3KeyPrefix)/scripts/Modules/Module-WAPADFS/$CustomModule" -File "C:\AWSQuickstart\Module-WAPADFS\$CustomModule" -Region $S3BucketRegion
                       } Catch [System.Exception] {
                           Write-Output "Failed to read and download $CustomModule.Name from S3 $_"
                           Exit 1
@@ -736,6 +742,7 @@ Resources:
             VolumeSize: 60
             VolumeType: gp3
             Encrypted: true
+            KmsKeyId: !Ref 'EbsEncryptionKmsKeyId'
             DeleteOnTermination: true
       SecurityGroupIds:
         - !Ref 'WAPSecurityGroup'
@@ -759,6 +766,7 @@ Resources:
             VolumeSize: 60
             VolumeType: gp3
             Encrypted: true
+            KmsKeyId: !Ref 'EbsEncryptionKmsKeyId'
             DeleteOnTermination: true
       SecurityGroupIds:
         - !Ref 'WAPSecurityGroup'
@@ -782,6 +790,7 @@ Resources:
             VolumeSize: 60
             VolumeType: gp3
             Encrypted: true
+            KmsKeyId: !Ref 'EbsEncryptionKmsKeyId'
             DeleteOnTermination: true
       SecurityGroupIds:
         - !Ref 'ADFSSecurityGroup'
@@ -813,6 +822,7 @@ Resources:
             VolumeSize: 60
             VolumeType: gp3
             Encrypted: true
+            KmsKeyId: !Ref 'EbsEncryptionKmsKeyId'
             DeleteOnTermination: true
       SecurityGroupIds:
         - !Ref 'ADFSSecurityGroup'
