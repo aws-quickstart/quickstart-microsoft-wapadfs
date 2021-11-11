@@ -80,7 +80,7 @@ Metadata:
       DomainNetBIOSName:
         default: Domain NetBIOS name
       EbsEncryptionKmsKeyId:
-        default: KMS Key for EBS Encryption
+        default: KMS Key for EBS encryption
       KeyPairName:
         default: Key pair name
       LatestAmiId:
@@ -96,7 +96,7 @@ Metadata:
       QSS3BucketName:
         default: Quick Start S3 bucket name
       QSS3BucketRegion:
-        default: Quick Start S3 bucket Region
+        default: Quick Start S3 bucket region
       QSS3KeyPrefix:
         default: Quick Start S3 key prefix
       VPCCIDR:
@@ -122,7 +122,7 @@ Parameters:
     Description: Type of Active Directory the WAP / ADFS deployment will be integrated with, AWS Managed Microsoft AD or Self Managed AD
     Type: String
   DomainAdminUserSecret:
-    Description: ARN for the Administrator credentials Secret with "username" and "password" key pairs. This account must be a member of Domain Admins with Self Managed directories or a member of AWS Delegated Administrators with AWS Managed Microsoft AD.
+    Description: ARN for the Administrator credentials Secret with "username" and "password" key pairs. This account must be a member of Domain Admins with Self-Managed directories or a member of AWS Delegated Administrators with AWS Managed Microsoft AD.
     Type: String
   DomainController1IP:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
@@ -159,7 +159,7 @@ Parameters:
     Description: Public/private key pairs allow you to securely connect to your instance after it launches
     Type: AWS::EC2::KeyPair::KeyName
   LatestAmiId:
-    Default: /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base
+    Default: /aws/service/ami-windows-latest/Windows_Server-2022-English-Full-Base
     Description: Systems Manager parameter value for latest Windows Server AMI
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
   PrivateSubnet1ID:
@@ -203,6 +203,8 @@ Parameters:
     AllowedValues:
       - t3.medium
       - t3.large
+      - t3.xlarge
+      - t3.2xlarge
       - m5.large
       - m5.xlarge
       - m5.2xlarge
@@ -350,7 +352,7 @@ Resources:
             description: Type of Active Directory ADFS will be deployed to.
             type: String
           DomainAdminUserSecret:
-            description: Secret ARN Containing Administrator Credentials
+            description: Secret ARN containing Administrator credentials
             type: String
           DomainController1IP:
             description: IP of DNS server that can resolve domain (Must be accessible)
@@ -503,7 +505,7 @@ Resources:
                       },
                       @{
                           Name    = 'ComputerManagementDsc'
-                          Version = '8.4.0'
+                          Version = '8.5.0'
                       }
                   )
 
@@ -550,7 +552,20 @@ Resources:
                           Write-Output "Failed to Import Modules $_"
                           Exit 1
                       }
-                  } 
+                  }
+
+                  $OS = Get-CimInstance -ClassName 'Win32_OperatingSystem' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty 'Caption'
+                  If ($OS -like 'Microsoft Windows Server 2022 *') {
+                  Write-Output 'Disabling TLS 1.3 client due to bug in ADFS Deployment on Windows Server 2022.'
+                      Try {
+                          New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client' -Force -ErrorAction Stop
+                          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client' -Name 'Enabled' -Value 0 –PropertyType DWORD -ErrorAction Stop
+                          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client' -Name 'DisabledByDefault' -Value 1 –PropertyType DWORD -ErrorAction Stop
+                      } Catch [System.Exception] {
+                          Write-Output "Failed to disable TLS 1.3 client $_"
+                          Exit 1
+                      }
+                  }
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: 'true'
                 CloudWatchLogGroupName: !Sub '/aws/Quick_Start/${AWS::StackName}'
@@ -609,21 +624,16 @@ Resources:
                 CloudWatchOutputEnabled: 'true'
                 CloudWatchLogGroupName: !Sub '/aws/Quick_Start/${AWS::StackName}'
               Parameters:
-                commands:
-                  - |
-                    function DscStatusCheck () {
-                        $LCMState = (Get-DscLocalConfigurationManager).LCMState
-                        if ($LCMState -eq 'PendingConfiguration' -Or $LCMState -eq 'PendingReboot') {
-                            'returning 3010, should continue after reboot'
-                            exit 3010
-                        } else {
-                            'Completed'
-                        }
-                    }
+                commands: |-
+                  Try {
+                      Import-Module -Name 'C:\AWSQuickstart\Module-WAPADFS\Module-WAPADFS.psm1' -Force
+                  } Catch [System.Exception] {
+                      Write-Output "Failed to importing WAPADFS PS Module $_"
+                      Exit 1
+                  }
+                  Start-DscConfiguration 'C:\AWSQuickstart\ConfigInstance' -Wait -Verbose -Force
 
-                    Start-DscConfiguration 'C:\AWSQuickstart\ConfigInstance' -Wait -Verbose -Force
-
-                    DscStatusCheck
+                  Invoke-DscStatusCheck
             nextStep: InstallAdsf1
           - name: InstallAdsf1
             action: aws:runCommand

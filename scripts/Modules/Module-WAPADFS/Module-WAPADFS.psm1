@@ -10,11 +10,11 @@ Function Invoke-PreConfig {
         Exit 1
     }
     
-    Write-Output 'Creating file directory for DSC public cert'
+    Write-Output 'Creating file directory for DSC public certificate'
     Try {
         $Null = New-Item -Path 'C:\AWSQuickstart\publickeys' -ItemType 'Directory' -ErrorAction Stop
     } Catch [System.Exception] {
-        Write-Output "Failed to create publickeys file directory $_"
+        Write-Output "Failed to create file directory for DSC public certificate $_"
         Exit 1
     }
     
@@ -22,7 +22,7 @@ Function Invoke-PreConfig {
     Try {
         $cert = New-SelfSignedCertificate -Type 'DocumentEncryptionCertLegacyCsp' -DnsName 'AWSQSDscEncryptCert' -HashAlgorithm 'SHA256' -ErrorAction Stop
     } Catch [System.Exception] {
-        Write-Output "Failed to create self signed cert $_"
+        Write-Output "Failed to create certificate to encrypt credentials in MOF file $_"
         Exit 1
     }
     
@@ -30,7 +30,7 @@ Function Invoke-PreConfig {
     Try {
         $Null = $cert | Export-Certificate -FilePath 'C:\AWSQuickstart\publickeys\AWSQSDscPublicKey.cer' -Force -ErrorAction Stop
     } Catch [System.Exception] {
-        Write-Output "Failed to copy self signed cert to publickeys directory $_"
+        Write-Output "Failed to copy self signed certificate to publickeys directory $_"
         Exit 1
     }    
 }
@@ -40,11 +40,11 @@ Function Invoke-LcmConfig {
     # Main
     #==================================================
 
-    Write-Output 'Getting the DSC cert thumbprint to secure the MOF file'
+    Write-Output 'Getting the DSC certificate thumbprint to secure the MOF file'
     Try {
         $DscCertThumbprint = Get-ChildItem -Path 'cert:\LocalMachine\My' -ErrorAction Stop | Where-Object { $_.Subject -eq 'CN=AWSQSDscEncryptCert' } | Select-Object -ExpandProperty 'Thumbprint'
     } Catch [System.Exception] {
-        Write-Output "Failed to get DSC cert thumbprint $_"
+        Write-Output "Failed to get DSC certificate thumbprint $_"
         Exit 1
     } 
     
@@ -63,14 +63,14 @@ Function Invoke-LcmConfig {
         }
     }
     
-    Write-Output 'Generating MOF file for LCM'
+    Write-Output 'Generating MOF file for DSC LCM'
     LCMConfig -OutputPath 'C:\AWSQuickstart\LCMConfig'
         
-    Write-Output 'Sets LCM configuration to MOF generated in previous command'
+    Write-Output 'Setting the DSC LCM configuration from the MOF generated in previous command'
     Try {
         Set-DscLocalConfigurationManager -Path 'C:\AWSQuickstart\LCMConfig' -ErrorAction Stop
     } Catch [System.Exception] {
-        Write-Output "Failed to set LCM configuration $_"
+        Write-Output "Failed to set DSC LCM configuration $_"
         Exit 1
     } 
 }
@@ -131,7 +131,7 @@ Function Get-SecretInfo {
         Exit 1
     }
        
-    Write-Output 'Creating credential object'
+    Write-Output 'Creating PSCredential object from Secret'
     $Username = $SecretContent.username
     $UserPassword = ConvertTo-SecureString ($SecretContent.password) -AsPlainText -Force
     $Credentials = New-Object -TypeName 'System.Management.Automation.PSCredential' ("$DomainNetBIOSName\$Username", $UserPassword)
@@ -143,6 +143,20 @@ Function Get-SecretInfo {
     }
 
     Return $Output
+}
+
+Function Invoke-DscStatusCheck {
+
+    #==================================================
+    # Main
+    #==================================================
+
+    $LCMState = Get-DscLocalConfigurationManager -ErrorAction SilentlyContinue | Select-Object -ExpandProperty 'LCMState'
+    If ($LCMState -eq 'PendingConfiguration' -Or $LCMState -eq 'PendingReboot') {
+        Exit 3010
+    } Else {
+        Write-Output 'DSC configuration completed'
+    }
 }
 
 Function Set-DscConfiguration {
@@ -162,11 +176,11 @@ Function Set-DscConfiguration {
     # Main
     #==================================================
 
-    Write-Output 'Getting the DSC encryption thumbprint to secure the MOF file'
+    Write-Output 'Getting the DSC encryption certificate thumbprint to secure the MOF file'
     Try {
         $DscCertThumbprint = Get-ChildItem -Path 'cert:\LocalMachine\My' -ErrorAction Stop | Where-Object { $_.Subject -eq 'CN=AWSQSDscEncryptCert' } | Select-Object -ExpandProperty 'Thumbprint'
     } Catch [System.Exception] {
-        Write-Output "Failed to get DSC cert thumbprint $_"
+        Write-Output "Failed to get DSC encryption certificate thumbprint $_"
         Exit 1
     }
     
@@ -293,7 +307,7 @@ Function Set-CredSSP {
                 Exit 1
             }
        
-            Write-Output 'Setting CredSSP Registry entries'
+            Write-Output 'Setting CredSSP registry entries'
             $CredDelKeyPresent = Test-Path -Path (Join-Path -Path $RootKey -ChildPath $CredDelKey) -ErrorAction SilentlyContinue
             If (-not $CredDelKeyPresent) {
                 Try {
@@ -316,7 +330,7 @@ Function Set-CredSSP {
                     $Null = New-ItemProperty -Path "Registry::$FreshCredKeyPath" -Name '1' -Value 'WSMAN/*' -PropertyType 'String' -Force -ErrorAction Stop
                     $Null = New-ItemProperty -Path "Registry::$FreshCredKeyNTLMPath" -Name '1' -Value 'WSMAN/*' -PropertyType 'String' -Force -ErrorAction Stop
                 } Catch [System.Exception] {
-                    Write-Output "Failed to create CredSSP Registry entries $_"
+                    Write-Output "Failed to create CredSSP registry entries $_"
                     Remove-Item -Path (Join-Path -Path $RootKey -ChildPath $CredDelKey) -Force -Recurse
                     Exit 1
                 }
@@ -332,16 +346,16 @@ Function Set-CredSSP {
                 Exit 1
             }
 
-            Write-Output 'Removing CredSSP Registry entries'
+            Write-Output 'Removing CredSSP registry entries'
             Try {
                 Remove-Item -Path (Join-Path -Path $RootKey -ChildPath $CredDelKey) -Force -Recurse
             } Catch [System.Exception] {
-                Write-Output "Failed to remove CredSSP Registry entries $_"
+                Write-Output "Failed to remove CredSSP registry entries $_"
                 Exit 1
             }
         }
         Default { 
-            Write-Output 'InvalidArgument: Invalid value is passed for parameter Type' 
+            Write-Output 'InvalidArgument: Invalid value is passed for parameter Action' 
             Exit 1
         }
     }
@@ -526,7 +540,7 @@ Function Set-AdfsCertTemplateAclInheritance {
         Try {
             Set-Acl -AclObject $ObjectAcl -Path "AD:\$Using:Path" -ErrorAction Stop
         } Catch [System.Exception] {
-            Write-Output "Failed to set ACL for $Using:Path $_"
+            Write-Output "Failed to set ACL inheritance for $Using:Path $_"
             Exit 1
         }
     }
@@ -793,11 +807,11 @@ Function Install-FirstADFS {
         Exit 1
     }
 
-    Write-Output 'Importing AD domain Info'
+    Write-Output 'Getting AD domain information'
     Try {
         $Domain = Get-ADDomain -ErrorAction Stop
     } Catch [System.Exception] {
-        Write-Output "Failed to get AD domain $_"
+        Write-Output "Failed to get AD domain information $_"
         Exit 1
     }
 
@@ -805,11 +819,11 @@ Function Install-FirstADFS {
     $DNSRoot = $Domain.DNSRoot
     $NetBiosName = $Domain.NetBIOSName
 
-    Write-Output 'Getting a domain controller to perform actions against'
+    Write-Output 'Getting a Domain Controller to perform actions against'
     Try {
         $DC = Get-ADDomainController -Discover -ForceDiscover -NextClosestSite -ErrorAction Stop | Select-Object -ExpandProperty 'HostName'
     } Catch [System.Exception] {
-        Write-Output "Failed to get a domain controller $_"
+        Write-Output "Failed to get a Domain Controller $_"
         Exit 1
     }
 
@@ -833,7 +847,7 @@ Function Install-FirstADFS {
         Try {
             $Null = New-SmbShare -Name 'cert' -Path 'C:\cert' -FullAccess 'SYSTEM', "$NetBiosName\$Username", "$NetBiosName\Domain Admins" -ReadAccess "$NetBiosName\Domain Computers" -ErrorAction Stop
         } Catch [System.Exception] {
-            Write-Output "Failed to create cert SMB Share $_"
+            Write-Output "Failed to create cert SMB share $_"
             Exit 1
         }
     }
@@ -1042,19 +1056,19 @@ Function Install-AdditionalADFS {
         Exit 1
     }
 
-    Write-Output 'Importing AD Domain Info'
+    Write-Output 'Getting AD domain information'
     Try {
         $Domain = Get-ADDomain -ErrorAction Stop
     } Catch [System.Exception] {
-        Write-Output "Failed to get AD domain $_"
+        Write-Output "Failed to get AD domain information $_"
         Exit 1
     }
 
-    Write-Output 'Getting a domain controller to perform actions against'
+    Write-Output 'Getting a Domain Controller to perform actions against'
     Try {
         $DC = Get-ADDomainController -Discover -ForceDiscover -NextClosestSite -ErrorAction Stop | Select-Object -ExpandProperty 'HostName'
     } Catch [System.Exception] {
-        Write-Output "Failed to get a domain controller $_"
+        Write-Output "Failed to get a Domain Controller $_"
         Exit 1
     }
 
@@ -1064,11 +1078,11 @@ Function Install-AdditionalADFS {
     Write-Output "Adding $CompName to group $gMSAGroupName"
     Invoke-AdfsServiceAccount -Credential $Credential -CompName $CompName -DC $DC -DirectoryType $DirectoryType -gMSAName $gMSAName -GroupName $gMSAGroupName
 
-    Write-Output 'Installing AD FS Binaries'
+    Write-Output 'Installing ADFS binaries'
     Try {
         $Null = Install-WindowsFeature -Name 'ADFS-Federation' -IncludeManagementTools -ErrorAction Stop
     } Catch [System.Exception] {
-        Write-Output "Failed to install AD FS Binaries $_"
+        Write-Output "Failed to install ADFS binaries $_"
         Exit 1
     }
 
@@ -1137,11 +1151,11 @@ Function Install-WAP {
         Exit 1
     }
 
-    Write-Output 'Importing AD Domain Info'
+    Write-Output 'Getting AD domain information'
     Try {
         $Domain = Get-ADDomain -ErrorAction Stop
     } Catch [System.Exception] {
-        Write-Output "Failed to get AD domain $_"
+        Write-Output "Failed to get AD domain information $_"
         Exit 1
     }
 
@@ -1185,13 +1199,13 @@ Function Install-WAP {
     } Until ($StsRecordPresent -or $Counter -eq 12)
 
     If ($Counter -ge 12) {
-        Write-Output 'sts record never appeared'
+        Write-Output 'STS record never appeared'
         Exit 1
     }
 
     Write-Output 'Installing WAP'
     Try {
-        $Null = Install-WebApplicationProxy -CertificateThumbprint $CertificateThumbprint -FederationServiceName "sts.$DNSRoot" -FederationServiceTrustCredential $Credential
+        $Null = Install-WebApplicationProxy -CertificateThumbprint $CertificateThumbprint -FederationServiceName "sts.$DNSRoot" -FederationServiceTrustCredential $Credential -ErrorAction Stop
     } Catch [System.Exception] {
         Write-Output "Failed to install WAP $_"
         Exit 1
@@ -1207,14 +1221,14 @@ Function Start-CleanUp {
     Try {
         Get-NetFirewallProfile -ErrorAction Stop | Set-NetFirewallProfile -Enabled 'True' -ErrorAction Stop
     } Catch [System.Exception] {
-        Write-Output "Failed to re-enable firewall $_"
+        Write-Output "Failed to re-enable Windows Firewall $_"
     }  
 
-    Write-Output 'Removing DSC Configuration'
+    Write-Output 'Removing DSC configuration'
     Try {    
         Remove-DscConfigurationDocument -Stage 'Current' -ErrorAction Stop
     } Catch [System.Exception] {
-        Write-Output "Failed to remove DSC Configuration $_"
+        Write-Output "Failed to remove DSC configuration $_"
     }
     
     Write-Output 'Removing QuickStart build files'
@@ -1224,11 +1238,11 @@ Function Start-CleanUp {
         Write-Output "Failed remove QuickStart build files $_"
     }
     
-    Write-Output 'Removing self signed cert'
+    Write-Output 'Removing self signed certificate'
     Try {
         $SelfSignedThumb = Get-ChildItem -Path 'cert:\LocalMachine\My\' -ErrorAction Stop | Where-Object { $_.Subject -eq 'CN=AWSQSDscEncryptCert' } | Select-Object -ExpandProperty 'Thumbprint'
         Remove-Item -Path "cert:\LocalMachine\My\$SelfSignedThumb" -DeleteKey
     } Catch [System.Exception] {
-        Write-Output "Failed remove self signed cert $_"
+        Write-Output "Failed remove self signed certificate $_"
     }
 }
