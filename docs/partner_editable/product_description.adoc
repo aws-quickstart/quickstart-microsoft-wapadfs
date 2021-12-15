@@ -6,7 +6,7 @@ Microsoft Active Directory Federation Services (AD FS) is a Windows Server role 
 
 For example, you could implement identity federation with AWS Identity and Access Management (IAM) and AD FS, and then use your Active Directory user name and password (instead of the AWS root account or IAM user credentials) to sign in to the AWS Management Console, or to make calls to AWS APIs.
 
-Like domain controllers and other internal server workloads, AD FS servers are deployed in a private virtual private cloud (VPC) subnet. In order to make AD FS accessible to external users, you can deploy the Web Application Proxy role on Windows Server 2012 R2. The Web Application Proxy server can proxy requests to the AD FS infrastructure for users who are connecting from an external location, without the need for VPN connectivity.
+Like domain controllers and other internal server workloads, AD FS servers are deployed in a private virtual private cloud (VPC) subnet. In order to make AD FS accessible to external users, you can deploy the Web Application Proxy role on Windows Server 2022. The Web Application Proxy server can proxy requests to the AD FS infrastructure for users who are connecting from an external location, without the need for VPN connectivity.
 
 You can also use Web Application Proxy to selectively publish and pre-authenticate connections to internal web applications, allowing external users outside your organization to access those applications over the internet.
 
