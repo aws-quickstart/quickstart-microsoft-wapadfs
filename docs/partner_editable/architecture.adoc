@@ -14,7 +14,7 @@ The AWS CloudFormation template creates a fully functional AD FS federation serv
 * Public subnets in each Availability Zone that provide access to and from the internet. The public subnets include network address translation (NAT) gateway instances for outbound internet access, and Remote Desktop Gateway (RD Gateway) instances in an Auto Scaling group for inbound remote administrative access. Web Application Proxy servers are deployed in the public subnets to help provide secure inbound connectivity to web applications.*
 * Private subnets in each Availability Zone for running enterprise workloads such as Active Directory domain controllers and AD FS servers, shielded from direct access over the internet.*
 * In the private subnets, domain controllers that act as enterprise certificate authorities (CAs) that issue the required SSL certificates to the AD FS infrastructure. For production deployments, you might want to consider commercial certificates issued from a public CA, and we’ll cover this in greater detail later in this guide.
-* In the private subnets, two AD FS servers running on Windows Server 2012 R2, which are deployed in each Availability Zone to support high availability and load distribution.
+* In the private subnets, two AD FS servers running on Windows Server 2022, which are deployed in each Availability Zone to support high availability and load distribution.
 * Security groups to tightly control the flow of traffic between your Amazon EC2 instances.
 
 *The template that deploys the Quick Start into an existing VPC skips

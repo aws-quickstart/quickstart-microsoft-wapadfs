@@ -1,6 +1,18 @@
 // Add steps as necessary for accessing the software, post-configuration, and testing. Don’t include full usage instructions for your software, but add links to your product documentation for that information.
 //Should any sections not be applicable, remove them
 
+== Post-deployment steps
+
+=== Run Windows Updates
+
+In order to ensure the deployed servers' operating systems and installed applications have the latest Microsoft updates, run Windows Update on each server.
+
+1. Create an RDP session from the Remote Desktop Gateway server to each deployed server.
+2. Open the *Settings* application.
+3. Open *Update & Security*.
+4. Click *Check for updates*.
+5. Install any updates and reboot if necessary.
+
 [[design-considerations]]
 == Design Considerations
 

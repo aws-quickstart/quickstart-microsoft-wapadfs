@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.12">
+<meta name="generator" content="Asciidoctor 2.0.16">
 <title>Web Application Proxy and AD FS on the AWS Cloud</title>
 <style>
 
@@ -182,7 +182,7 @@ p a>code:hover{color:rgba(0,0,0,.9)}
   padding-top:0;
   overflow:hidden;
   background:#283e5b;
-  border-bottom: 4px solid #435c7c;
+  /* border-bottom: 4px solid #435c7c; */
   width:320px;
   height:154px;
   top:0;
@@ -411,7 +411,7 @@ span.icon>.fa{cursor:default}
 a span.icon>.fa{cursor:inherit}
 .admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
 .admonitionblock td.icon .icon-note::before{content:"\f05a";color:#19407c}
-.admonitionblock td.icon .icon-tip::before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
+.admonitionblock td.icon .icon-tip::before{content:"\f0eb";color: rgb(3, 87, 21);}
 .admonitionblock td.icon .icon-warning::before{content:"\f071";color:#bf6900}
 .admonitionblock td.icon .icon-caution::before{content:"\f06d";color:#bf3400}
 .admonitionblock td.icon .icon-important::before{content:"\f06a";color:#bf0000}
@@ -747,8 +747,43 @@ p {
   font-weight  : 300 !important;
 }
 
-#toc.toc2 #toctitle{
-  background-image: url('images/AWS-Logo.svg');
+/* image layout */
+#toc.toc2 #toctitle {
+  background-image: url("images/AWS-Logo.svg");
+  background-repeat: no-repeat;
+  background-size: 50%;
+  background-position: center;
+  width: auto;
+  height: 15%;
+}
+
+/* Left Navbar size */
+#toc.toc2 {
+  width: 17%;
+  min-width: 15em;
+}
+
+/* auto width for main page */
+body.toc2 {
+  padding-left: 22%;
+  padding-right: 2%;
+}
+
+/* hide left nav bar if page size is smaller than 767px */
+@media screen and (max-width: 767px) {
+  #toc {
+      display: none !important;
+  }
+  body.toc2 {
+    padding-left: 1%;
+    padding-right: 1%;
+    position: relative;
+  }
+
+  #content {
+    padding-left: 2%;
+    padding-right: 2%;
+  }
 }
 
 /* QS Tables */
@@ -811,6 +846,11 @@ p.footer-text a{color:#d7d8d8}
 <li><a href="#_launch_into_an_existing_vpc">Launch into an existing VPC</a></li>
 </ul>
 </li>
+<li><a href="#_post_deployment_steps">Post-deployment steps</a>
+<ul class="sectlevel2">
+<li><a href="#_run_windows_updates">Run Windows Updates</a></li>
+</ul>
+</li>
 <li><a href="#design-considerations">Design Considerations</a>
 <ul class="sectlevel2">
 <li><a href="#selecting-an-instance-type">Selecting an Instance Type</a></li>
@@ -830,6 +870,7 @@ p.footer-text a{color:#d7d8d8}
 <li><a href="#_additional_resources">Additional Resources</a></li>
 <li><a href="#_faq">FAQ</a></li>
 <li><a href="#_appendix_publishing_outlook_web_app_to_the_internet_with_ad_fs_pre_authentication">Appendix: Publishing Outlook Web App to the Internet with AD FS Pre-Authentication</a></li>
+<li><a href="#_customer_responsibility">Customer responsibility</a></li>
 <li><a href="#_send_us_feedback">Send us feedback</a></li>
 <li><a href="#_quick_start_reference_deployments">Quick Start reference deployments</a></li>
 <li><a href="#_github_repository">GitHub repository</a></li>
@@ -890,7 +931,7 @@ report bugs, or submit feature ideas for this Quick Start.
 <p>For example, you could implement identity federation with AWS Identity and Access Management (IAM) and AD FS, and then use your Active Directory user name and password (instead of the AWS root account or IAM user credentials) to sign in to the AWS Management Console, or to make calls to AWS APIs.</p>
 </div>
 <div class="paragraph">
-<p>Like domain controllers and other internal server workloads, AD FS servers are deployed in a private virtual private cloud (VPC) subnet. In order to make AD FS accessible to external users, you can deploy the Web Application Proxy role on Windows Server 2012 R2. The Web Application Proxy server can proxy requests to the AD FS infrastructure for users who are connecting from an external location, without the need for VPN connectivity.</p>
+<p>Like domain controllers and other internal server workloads, AD FS servers are deployed in a private virtual private cloud (VPC) subnet. In order to make AD FS accessible to external users, you can deploy the Web Application Proxy role on Windows Server 2022. The Web Application Proxy server can proxy requests to the AD FS infrastructure for users who are connecting from an external location, without the need for VPN connectivity.</p>
 </div>
 <div class="paragraph">
 <p>You can also use Web Application Proxy to selectively publish and pre-authenticate connections to internal web applications, allowing external users outside your organization to access those applications over the internet.</p>
@@ -932,7 +973,7 @@ report bugs, or submit feature ideas for this Quick Start.
 <h2 id="_aws_costs">AWS costs</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>You are responsible for the cost of the AWS services and any paid third-party licenses used while running this Quick Start. There is no additional cost for
+<p>You are responsible for the cost of the AWS services and any third-party licenses used while running this Quick Start. There is no additional cost for
 using the Quick Start.</p>
 </div>
 <div class="paragraph">
@@ -948,7 +989,7 @@ see the pricing pages for each AWS service you use. Prices are subject to change
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-After you deploy the Quick Start, <a href="https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-reports-gettingstarted-turnonreports.html" target="_blank" rel="noopener">create AWS Cost and Usage Reports</a> to deliver billing metrics to an Amazon Simple Storage Service (Amazon S3) bucket in your account. These reports provide cost estimates based on usage throughout each month and aggregate the data at the end of the month. For more information, see <a href="https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-reports-costusage.html" target="_blank" rel="noopener">What are AWS Cost and Usage Reports?</a>
+After you deploy the Quick Start, create <a href="https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-reports-gettingstarted-turnonreports.html" target="_blank" rel="noopener">AWS Cost and Usage Reports</a> to deliver billing metrics to an Amazon Simple Storage Service (Amazon S3) bucket in your account. These reports provide cost estimates based on usage throughout each month and aggregate the data at the end of the month. For more information, see <a href="https://docs.aws.amazon.com/cur/latest/userguide/what-is-cur.html" target="_blank" rel="noopener">What are AWS Cost and Usage Reports?</a>
 </td>
 </tr>
 </table>
@@ -996,7 +1037,7 @@ AWS Cloud.</p>
 <p>In the private subnets, domain controllers that act as enterprise certificate authorities (CAs) that issue the required SSL certificates to the AD FS infrastructure. For production deployments, you might want to consider commercial certificates issued from a public CA, and we’ll cover this in greater detail later in this guide.</p>
 </li>
 <li>
-<p>In the private subnets, two AD FS servers running on Windows Server 2012 R2, which are deployed in each Availability Zone to support high availability and load distribution.</p>
+<p>In the private subnets, two AD FS servers running on Windows Server 2022, which are deployed in each Availability Zone to support high availability and load distribution.</p>
 </li>
 <li>
 <p>Security groups to tightly control the flow of traffic between your Amazon EC2 instances.</p>
@@ -1037,12 +1078,12 @@ deploy, and operate your infrastructure and applications on the AWS Cloud.</p>
 <div class="sect2">
 <h3 id="_technical_requirements">Technical requirements</h3>
 <div class="paragraph">
-<p>Before you launch the Quick Start, your account must be configured as specified in the following table. Otherwise, deployment might fail.</p>
+<p>Before you launch the Quick Start, review the following information and ensure that your account is properly configured. Otherwise, deployment might fail.</p>
 </div>
 <div class="sect3">
 <h4 id="_resource_quotas">Resource quotas</h4>
 <div class="paragraph">
-<p>If necessary, request <a href="https://console.aws.amazon.com/servicequotas/home?region=us-east-2#!/" target="_blank" rel="noopener">service quota increases</a> for the following resources. You might request quota increases to avoid exceeding the default limits for any resources that are shared across multiple deployments. The <a href="https://console.aws.amazon.com/servicequotas/home?region=us-east-2#!/" target="_blank" rel="noopener">Service Quotas console</a> displays your usage and quotas for some aspects of some services. For more information, see <a href="https://docs.aws.amazon.com/servicequotas/latest/userguide/intro.html" target="_blank" rel="noopener">What is Service Quotas?</a> and <a href="https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html" target="_blank" rel="noopener">AWS service quotas</a>.</p>
+<p>If necessary, request <a href="https://console.aws.amazon.com/servicequotas/home?region=us-east-2#!/" target="_blank" rel="noopener">service quota increases</a> for the following resources. You might need to request increases if your existing deployment currently uses these resources and if this Quick Start deployment could result in exceeding the default quotas. The <a href="https://console.aws.amazon.com/servicequotas/home?region=us-east-2#!/" target="_blank" rel="noopener">Service Quotas console</a> displays your usage and quotas for some aspects of some services. For more information, see <a href="https://docs.aws.amazon.com/servicequotas/latest/userguide/intro.html" target="_blank" rel="noopener">What is Service Quotas?</a> and <a href="https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html" target="_blank" rel="noopener">AWS service quotas</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -1080,9 +1121,12 @@ deploy, and operate your infrastructure and applications on the AWS Cloud.</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_supported_regions">Supported Regions</h4>
+<h4 id="_supported_aws_regions">Supported AWS Regions</h4>
 <div class="paragraph">
-<p>This Quick Start is supported in all non-GovCloud AWS Regions</p>
+<p>For any Quick Start to work in a Region other than its default Region, all the services it deploys must be supported in that Region. You can launch a Quick Start in any Region and see if it works. If you get an error such as “Unrecognized resource type,” the Quick Start is not supported in that Region.</p>
+</div>
+<div class="paragraph">
+<p>For an up-to-date list of AWS Regions and the AWS services they support, see <a href="https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/" target="_blank" rel="noopener">AWS Regional Services</a>.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -1098,9 +1142,9 @@ Certain Regions are available on an opt-in basis. For more information, see <a h
 </div>
 </div>
 <div class="sect3">
-<h4 id="_ec2_key_pairs">EC2 key pairs</h4>
+<h4 id="_amazon_ec2_key_pairs">Amazon EC2 key pairs</h4>
 <div class="paragraph">
-<p>Make sure that at least one <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html" target="_blank" rel="noopener">Amazon EC2 key pair</a> exists in your AWS account in the Region where you plan to deploy the Quick Start. Make note of the key pair name. You need it during deployment. To create a key pair, see <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html" target="_blank" rel="noopener">Amazon EC2 key pairs and Linux instances</a>.</p>
+<p>Ensure that at least one Amazon EC2 key pair exists in your AWS account in the Region where you plan to deploy the Quick Start. Note the key-pair name because you will use it during deployment. To create a key pair, see <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html" target="_blank" rel="noopener">Amazon EC2 key pairs and Linux instances</a>.</p>
 </div>
 <div class="paragraph">
 <p>For testing or proof-of-concept purposes, we recommend creating a new key pair instead of using one that’s already being used by a production instance.</p>
@@ -1110,18 +1154,6 @@ Certain Regions are available on an opt-in basis. For more information, see <a h
 <h4 id="_iam_permissions">IAM permissions</h4>
 <div class="paragraph">
 <p>Before launching the Quick Start, you must sign in to the AWS Management Console with IAM permissions for the resources that the templates deploy. The <em>AdministratorAccess</em> managed policy within IAM provides sufficient permissions, although your organization may choose to use a custom policy with more restrictions. For more information, see <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_job-functions.html" target="_blank" rel="noopener">AWS managed policies for job functions</a>.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_prepare_for_the_deployment">Prepare for the deployment</h4>
-<div class="paragraph">
-<p>If you are deploying the WAP ADFS Quick Start into an existing VPC, ensure your Active Directory environment includes at least one certificate authority (CA). If you are using AWS Managed Microsoft Active Directory this will require you to have at least one domain-joined server that can be configured as the CA, since AWS Managed Microsoft Active Directory does not act as a CA natively. A domain-joined server can be promoted to a CA by executing the following PowerShell code from an elevated command prompt:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>Add-WindowsFeature Adcs-Cert-Authority -IncludeManagementTools
-Install-AdcsCertificationAuthority -CAType EnterpriseRootCA</pre>
-</div>
 </div>
 </div>
 <div class="sect3">
@@ -1141,6 +1173,18 @@ Install-AdcsCertificationAuthority -CAType EnterpriseRootCA</pre>
 </div>
 <div class="paragraph">
 <p>The Quick Start provides separate templates for these options. It also lets you configure Classless Inter-Domain Routing (CIDR) blocks, instance types, and WAP and AD FS settings, as discussed later in this guide.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_prepare_for_the_deployment">Prepare for the deployment</h4>
+<div class="paragraph">
+<p>If you are deploying the WAP ADFS Quick Start into an existing VPC, ensure your Active Directory environment includes at least one certificate authority (CA). If you are using AWS Managed Microsoft Active Directory this will require you to have at least one domain-joined server that can be configured as the CA, since AWS Managed Microsoft Active Directory does not act as a CA natively. A domain-joined server can be promoted to a CA by executing the following PowerShell code from an elevated command prompt:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Add-WindowsFeature Adcs-Cert-Authority -IncludeManagementTools
+Install-AdcsCertificationAuthority -CAType EnterpriseRootCA</pre>
+</div>
 </div>
 </div>
 </div>
@@ -1269,19 +1313,15 @@ If you’re deploying WAP and AD FS into an existing VPC, make sure that your VP
 </ol>
 </div>
 <div class="paragraph">
-<p>In the following tables, parameters are listed by category and described separately for the deployment options. When you finish reviewing and customizing the parameters, choose <strong>Next</strong>.</p>
+<p>+
+In the following tables, parameters are listed by category and described separately for the deployment options. When you finish reviewing and customizing the parameters, choose <strong>Next</strong>.</p>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Unless you are customizing the Quick Start templates for your own deployment projects, keep the default settings for the parameters <strong>Quick Start S3 bucket name</strong>, <strong>Quick Start S3 bucket Region</strong>, and <strong>Quick Start S3 key prefix</strong>. Changing these settings automatically updates code references to point to a new Quick Start location. For more information, see the <a href="https://aws-quickstart.github.io/option1.html" target="_blank" rel="noopener">AWS Quick Start Contributor’s Guide</a>.
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>+
+NOTE: Unless you are customizing the Quick Start templates for your own deployment projects, keep the default settings for the parameters <strong>Quick Start S3 bucket name</strong>, <strong>Quick Start S3 bucket Region</strong>, and <strong>Quick Start S3 key prefix</strong>. Changing these settings automatically updates code references to point to a new Quick Start location. For more information, see the <a href="https://aws-quickstart.github.io/option1.html" target="_blank" rel="noopener">AWS Quick Start Contributor’s Guide</a>.</p>
+</div>
+<div class="paragraph">
+<p>+</p>
 </div>
 </div>
 <div class="sect2">
@@ -1338,7 +1378,7 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 <td class="tableblock halign-left valign-top"><p class="tableblock">CIDR Block for the public DMZ subnet 2 located in Availability Zone 2</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Allowed Remote Desktop Gateway External Access CIDR
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allowed Remote Desktop Gateway external access CIDR
 (<code>RDGWCIDR</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Requires input</em></strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Allowed CIDR Block for external access to the Remote Desktop Gateways</p></td>
@@ -1361,34 +1401,28 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Key Pair Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Key Pair name
 (<code>KeyPairName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Requires input</em></strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Public/private key pairs allow you to securely connect to your instance after it launches</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Controller 1 Instance Type
-(<code>ADServer1InstanceType</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Controller 1 instance type
+(<code>ADServerInstanceType</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>m5.large</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Amazon EC2 instance type for the first Active Directory instance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Amazon EC2 instance type for the Active Directory instances</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Controller 1 NetBIOS Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Controller 1 NetBIOS name
 (<code>ADServer1NetBIOSName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>DC1</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">NetBIOS name of the first Active Directory server (up to 15 characters)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Controller 1 Private IP Address
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Controller 1 private IP address
 (<code>ADServer1PrivateIP</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>10.0.0.10</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fixed private IP for the first Active Directory server located in Availability Zone 1</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Controller 2 Instance Type
-(<code>ADServer2InstanceType</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>m5.large</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Amazon EC2 instance type for the second Active Directory instance</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Domain Controller 2 NetBIOS Name
@@ -1397,7 +1431,7 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 <td class="tableblock halign-left valign-top"><p class="tableblock">NetBIOS name of the second Active Directory server (up to 15 characters)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Controller 2 Private IP Address
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Controller 2 private IP address
 (<code>ADServer2PrivateIP</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>10.0.32.10</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fixed private IP for the second Active Directory server located in Availability Zone 2</p></td>
@@ -1406,19 +1440,19 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 <td class="tableblock halign-left valign-top"><p class="tableblock">Size of the domain controller data drive
 (<code>DataDriveSizeGiB</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>20</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Size of Data Drive that contains SYSVOL and NTDS</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Size of data drive that contains SYSVOL and NTDS</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Remote Desktop Gateway Instance Type
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remote Desktop Gateway instance type
 (<code>RDGWInstanceType</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>t2.large</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>m5.large</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Amazon EC2 instance type for the Remote Desktop Gateway instances</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">WAP and ADFS Server Instance Type
+<td class="tableblock halign-left valign-top"><p class="tableblock">WAP and ADFS Server instance type
 (<code>WAPADFSInstanceType</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>c4.2xlarge</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Amazon EC2 instance type for the WAP and ADFS Servers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>m5.large</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Amazon EC2 instance type for the WAP and ADFS servers</p></td>
 </tr>
 </tbody>
 </table>
@@ -1438,28 +1472,28 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain DNS Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain DNS name
 (<code>DomainDNSName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>example.com</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fully qualified domain name (FQDN) of the forest root domain e.g. example.com</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain NetBIOS Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain NetBIOS name
 (<code>DomainNetBIOSName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>example</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">NetBIOS name of the domain (up to 15 characters) for users of earlier versions of Windows e.g. EXAMPLE</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Admin User Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Admin username
 (<code>DomainAdminUser</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Admin</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">User name for the account that will be added as Domain Administrator. This is separate from the default "Administrator" account</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User name for the account that will be added as alternate Domain Administrator. This is separate from the default "Administrator" account</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Admin Password
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Admin password
 (<code>DomainAdminPassword</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Requires input</em></strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Password for the domain admin user. Must be at least 8 characters containing letters, numbers and symbols</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Password for the alternate domain admin user. Must be at least 8 characters containing letters, numbers and symbols</p></td>
 </tr>
 </tbody>
 </table>
@@ -1479,19 +1513,19 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Deploy PKI Infrastructure
+<td class="tableblock halign-left valign-top"><p class="tableblock">Deploy PKI infrastructure
 (<code>PKI</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>One-Tier</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Do you want to Deploy PKI Infrastructure if so what kind, Two Tier or One Tier</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Offline Root CA NetBIOS Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Offline Root CA NetBIOS name
 (<code>OrCaServerNetBIOSName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>ORCA1</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">NetBIOS name of the Offline Root CA server (Only Used For Two Tier PKI) (up to 15 characters)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Enterprise Root CA NetBIOS Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enterprise Root CA NetBIOS name
 (<code>EntCaServerNetBIOSName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>ENTCA1</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">NetBIOS name of the Enterprise Root or Subordinate CA server (up to 15 characters)</p></td>
@@ -1514,7 +1548,7 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Number of RDGW Hosts
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of RDGW hosts
 (<code>NumberOfRDGWHosts</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>1</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Enter the number of Remote Desktop Gateway hosts to create</p></td>
@@ -1537,7 +1571,7 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Quick Start S3 Bucket Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Quick Start S3 bucket name
 (<code>QSS3BucketName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>aws-quickstart</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).</p></td>
@@ -1549,7 +1583,7 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 <td class="tableblock halign-left valign-top"><p class="tableblock">The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Quick Start S3 Key Prefix
+<td class="tableblock halign-left valign-top"><p class="tableblock">Quick Start S3 key prefix
 (<code>QSS3KeyPrefix</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>quickstart-microsoft-wapadfs/</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).</p></td>
@@ -1560,7 +1594,7 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 <div class="sect2">
 <h3 id="_launch_into_an_existing_vpc">Launch into an existing VPC</h3>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 7. Network Configuration</caption>
+<caption class="title">Table 7. Network configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1578,7 +1612,7 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 <td class="tableblock halign-left valign-top"><p class="tableblock">VPC CIDR
 (<code>VPCCIDR</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>10.0.0.0/16</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">CIDR Block used by the VPC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CIDR Block of the VPC</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">VPC ID
@@ -1587,25 +1621,25 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 <td class="tableblock halign-left valign-top"><p class="tableblock">ID of the VPC (e.g., vpc-0343606e)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Private Subnet 1 ID
+<td class="tableblock halign-left valign-top"><p class="tableblock">Private subnet 1 ID
 (<code>PrivateSubnet1ID</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Requires input</em></strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Private Subnet 2 ID
+<td class="tableblock halign-left valign-top"><p class="tableblock">Private subnet 2 ID
 (<code>PrivateSubnet2ID</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Requires input</em></strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ID of the private subnet 2 in Availability Zone 2 (e.g., subnet-a0246dcd)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Public Subnet 1 ID
+<td class="tableblock halign-left valign-top"><p class="tableblock">Public subnet 1 ID
 (<code>PublicSubnet1ID</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Requires input</em></strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ID of the public subnet 1 in Availability Zone 1 (e.g., subnet-e3246d8e)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Public Subnet 2 ID
+<td class="tableblock halign-left valign-top"><p class="tableblock">Public subnet 2 ID
 (<code>PublicSubnet2ID</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Requires input</em></strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ID of the public subnet 2 in Availability Zone 2 (e.g., subnet-e3246d8e)</p></td>
@@ -1613,7 +1647,7 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 8. Amazon EC2 Configuration</caption>
+<caption class="title">Table 8. Amazon EC2 configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1628,27 +1662,27 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Key Pair Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Key pair name
 (<code>KeyPairName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Requires input</em></strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Public/private key pairs allow you to securely connect to your instance after it launches</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">WAP and ADFS Server Instance Type
-(<code>WAPADFSInstanceType</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>c4.2xlarge</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Amazon EC2 instance type for the WAP and ADFS Servers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SSM parameter to for latest AMI ID
+(<code>LatestAmiId</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/aws/service/ami-windows-latest/Windows_Server-2022-English-Full-Base</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Systems Manager parameter value for latest Windows Server AMI</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">SSM Parameter to Grab Latest AMI ID
-(<code>LatestAmiId</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">NO_DESCRIPTION</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">KMS Key for EBS encryption
+(<code>EbsEncryptionKmsKeyId</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>alias/aws/ebs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The identifier of the AWS KMS key to use for Amazon EBS encryption. You can specify the KMS key using any of the following; Key ID, Key alias, Key ARN, Alias ARN</p></td>
 </tr>
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 9. Microsoft Active Directory Configuration</caption>
+<caption class="title">Table 9. Microsoft Active Directory Domain Services configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1663,31 +1697,43 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain DNS Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Active Directory Domain Services type
+(<code>DirectoryType</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>SelfManaged</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Type of Active Directory the WAP / ADFS deployment will be integrated with, AWS Managed Microsoft AD or Self Managed AD</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IP the instances will use for DNS (must be accessible)
+(<code>DomainController1IP</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>10.0.0.10</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IP of DNS server that can resolve Active Directory domain (Must be accessible)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IP the instances will use for DNS (must be accessible)
+(<code>DomainController2IP</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>10.0.32.10</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IP of DNS server that can resolve Active Directory domain (Must be accessible)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain DNS name
 (<code>DomainDNSName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>example.com</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Fully qualified domain name (FQDN) of the forest root domain e.g. corp.example.com</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fully qualified domain name (FQDN) of the domain the WAP / ADFS instances will join e.g. corp.example.com</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain NetBIOS Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain NetBIOS name
 (<code>DomainNetBIOSName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>example</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">NetBIOS name of the domain (upto 15 characters) for users of earlier versions of Windows e.g. CORP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NetBIOS name of the domain the WAP / ADFS instances will join (up to 15 characters) for users of earlier versions of Windows e.g. CORP</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Admin User Name
-(<code>DomainAdminUser</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>StackAdmin</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">User name for the account that will be added as Domain Administrator. This is separate from the default "Administrator" account</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Admin Password
-(<code>DomainAdminPassword</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Secret ARN containing Administrator credentials
+(<code>DomainAdminUserSecret</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Requires input</em></strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Password for the domain admin user. Must be at least 8 characters containing letters, numbers and symbols</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ARN for the Administrator credentials Secret with "username" and "password" key pairs. This account must be a member of Domain Admins with Self-Managed directories or a member of AWS Delegated Administrators with AWS Managed Microsoft AD.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Domain Member Security Group ID
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain member security group ID
 (<code>DomainMemberSGID</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Requires input</em></strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">ID of the Domain Member Security Group (e.g., sg-7f16e910)</p></td>
@@ -1695,7 +1741,7 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 10. AWS Quick Start Configuration</caption>
+<caption class="title">Table 10. ADFS and WAP configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1710,7 +1756,54 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Quick Start S3 Bucket Name
+<td class="tableblock halign-left valign-top"><p class="tableblock">WAP and ADFS server instance type
+(<code>WAPADFSInstanceType</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>m5.large</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Amazon EC2 instance type for the WAP and ADFS Instances</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ADFS server 1 NetBIOS name
+(<code>Adfs1NetBIOSName</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ADFS1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">First ADFS Server NetBIOS Name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ADFS server 2 NetBIOS name
+(<code>Adfs2NetBIOSName</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ADFS2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Second ADFS Server NetBIOS Name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">WAP server 1 NetBIOS name
+(<code>Wap1NetBIOSName</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>WAP1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">First WAP Server NetBIOS Name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">WAP server 2 NetBIOS name
+(<code>Wap2NetBIOSName</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>WAP2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Second WAP Server NetBIOS Name</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 11. AWS Quick Start configuration</caption>
+<colgroup>
+<col style="width: 16%;">
+<col style="width: 11%;">
+<col style="width: 73%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter label (name)</th>
+<th class="tableblock halign-left valign-top">Default value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Quick Start S3 bucket name
 (<code>QSS3BucketName</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>aws-quickstart</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).</p></td>
@@ -1722,37 +1815,50 @@ Unless you are customizing the Quick Start templates for your own deployment pro
 <td class="tableblock halign-left valign-top"><p class="tableblock">The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Quick Start S3 Key Prefix
+<td class="tableblock halign-left valign-top"><p class="tableblock">Quick Start S3 key prefix
 (<code>QSS3KeyPrefix</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>quickstart-microsoft-wapadfs/</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).</p></td>
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>+
+. On the <strong>Configure stack options</strong> page, you can <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html" target="_blank" rel="noopener">specify tags</a> (key-value pairs) for resources in your stack and <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-add-tags.html" target="_blank" rel="noopener">set advanced options</a>. When you finish, choose <strong>Next</strong>.
+. On the <strong>Review</strong> page, review and confirm the template settings. Under <strong>Capabilities</strong>, select the two check boxes to acknowledge that the template creates IAM resources and might require the ability to automatically expand macros.
+. Choose <strong>Create stack</strong> to deploy the stack.
+. Monitor the status of the stack. When the status is <strong>CREATE_COMPLETE</strong>, the WAP and AD FS deployment is ready.
+. To view the created resources, see the values displayed in the <strong>Outputs</strong> tab for the stack.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_post_deployment_steps">Post-deployment steps</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_run_windows_updates">Run Windows Updates</h3>
+<div class="paragraph">
+<p>In order to ensure the deployed servers' operating systems and installed applications have the latest Microsoft updates, run Windows Update on each server.</p>
+</div>
 <div class="olist arabic">
-<ol class="arabic" start="5">
+<ol class="arabic">
 <li>
-<p>On the <strong>Configure stack options</strong> page, you can <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html" target="_blank" rel="noopener">specify tags</a> (key-value pairs) for resources in your stack and <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-add-tags.html" target="_blank" rel="noopener">set advanced options</a>. When you’re finished, choose <strong>Next</strong>.</p>
+<p>Create an RDP session from the Remote Desktop Gateway server to each deployed server.</p>
 </li>
 <li>
-<p>On the <strong>Review</strong> page, review and confirm the template settings. Under <strong>Capabilities</strong>, select the two check boxes to acknowledge that the template creates IAM resources and might require the ability to automatically expand macros.</p>
+<p>Open the <strong>Settings</strong> application.</p>
 </li>
 <li>
-<p>Choose <strong>Create stack</strong> to deploy the stack.</p>
+<p>Open <strong>Update &amp; Security</strong>.</p>
 </li>
 <li>
-<p>Monitor the status of the stack. When the status is <strong>CREATE_COMPLETE</strong>, the WAP and AD FS deployment is ready.</p>
+<p>Click <strong>Check for updates</strong>.</p>
 </li>
 <li>
-<p>Use the values displayed in the <strong>Outputs</strong> tab for the stack, as shown in <a href="#cfn_outputs">WAP and AD FS outputs after successful deployment</a>, to view the created resources.</p>
+<p>Install any updates and reboot if necessary.</p>
 </li>
 </ol>
-</div>
-<div id="cfn_outputs" class="imageblock">
-<div class="content">
-<a class="image" href="images/cfn_outputs.png"><img src="images/cfn_outputs.png" alt="cfn_outputs" width="100%" height="100%"></a>
-</div>
-<div class="title">Figure 4. WAP and AD FS outputs after successful deployment</div>
 </div>
 </div>
 </div>
@@ -2107,7 +2213,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image6.png"><img src="images/image6.png" alt="Additional1" width="532" height="299"></a>
 </div>
-<div class="title">Figure 5. Logging into the Exchange Admin Center</div>
+<div class="title">Figure 4. Logging into the Exchange Admin Center</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="5">
@@ -2120,7 +2226,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image7.png"><img src="images/image7.png" alt="Additional2" width="546" height="308"></a>
 </div>
-<div class="title">Figure 6. Viewing the virtual directories on EXCH1</div>
+<div class="title">Figure 5. Viewing the virtual directories on EXCH1</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="6">
@@ -2133,7 +2239,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image8.png"><img src="images/image8.png" alt="Additional3" width="480" height="302"></a>
 </div>
-<div class="title">Figure 7. Setting OWA authentication to Integrated Windows</div>
+<div class="title">Figure 6. Setting OWA authentication to Integrated Windows</div>
 </div>
 <div class="paragraph">
 <p><strong>Note</strong> In a load-balanced production environment, you would modify this setting on each Exchange server that is running the Client Access role.</p>
@@ -2152,7 +2258,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image9.png"><img src="images/image9.png" alt="Additional4" width="446" height="241"></a>
 </div>
-<div class="title">Figure 8. Adding a non-claims-aware relying party trust</div>
+<div class="title">Figure 7. Adding a non-claims-aware relying party trust</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="9">
@@ -2177,7 +2283,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image10.png"><img src="images/image10.png" alt="Additional5" width="603" height="145"></a>
 </div>
-<div class="title">Figure 9. Viewing the Remote Access Management console</div>
+<div class="title">Figure 8. Viewing the Remote Access Management console</div>
 </div>
 <div class="paragraph">
 <p>To publish OWA to the internet, you’ll need to create two rules. The first rule will be a pass-through authentication rule to the AD FS server. This will allow users to pre-authenticate before being connected to OWA.</p>
@@ -2196,7 +2302,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image11.png"><img src="images/image11.png" alt="Additional6" width="486" height="183"></a>
 </div>
-<div class="title">Figure 10. Selecting the pass-through pre-authentication method</div>
+<div class="title">Figure 9. Selecting the pass-through pre-authentication method</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="16">
@@ -2209,7 +2315,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image12.png"><img src="images/image12.png" alt="Additional7" width="488" height="233"></a>
 </div>
-<div class="title">Figure 11. Configuring the publishing rule</div>
+<div class="title">Figure 10. Configuring the publishing rule</div>
 </div>
 <div class="paragraph">
 <p><strong>Note</strong> If you’ve implemented internal load balancing for the AD FS tier, you can set the back-end server URL to a load-balanced endpoint instead of an individual server name.</p>
@@ -2228,7 +2334,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image13.png"><img src="images/image13.png" alt="Additional8" width="488" height="233"></a>
 </div>
-<div class="title">Figure 12. Selecting the AD FS pre-authentication method</div>
+<div class="title">Figure 11. Selecting the AD FS pre-authentication method</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="19">
@@ -2241,7 +2347,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image14.png"><img src="images/image14.png" alt="Additional9" width="488" height="233"></a>
 </div>
-<div class="title">Figure 13. Selecting the relying party</div>
+<div class="title">Figure 12. Selecting the relying party</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="20">
@@ -2254,7 +2360,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image15.png"><img src="images/image15.png" alt="Additional10" width="488" height="233"></a>
 </div>
-<div class="title">Figure 14. Configuring rule details</div>
+<div class="title">Figure 13. Configuring rule details</div>
 </div>
 <div class="paragraph">
 <p><strong>Note</strong> If you’ve implemented internal load balancing for the Exchange client access tier, you can set the back-end server URL and SPN to a load-balanced endpoint instead of an individual server name.</p>
@@ -2276,7 +2382,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image16.png"><img src="images/image16.png" alt="Additional11" width="315" height="353"></a>
 </div>
-<div class="title">Figure 15. Configuring Kerberos constrained delegation</div>
+<div class="title">Figure 14. Configuring Kerberos constrained delegation</div>
 </div>
 <div class="paragraph">
 <p>Now you are ready to test accessing OWA from an external workstation or server over the internet.</p>
@@ -2295,7 +2401,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image17.png"><img src="images/image17.png" alt="Additional12" width="315" height="353"></a>
 </div>
-<div class="title">Figure 16. Pre-authenticating to AD FS</div>
+<div class="title">Figure 15. Pre-authenticating to AD FS</div>
 </div>
 <div class="paragraph">
 <p>If the authentication is successful, the connection should be proxied to the EXCH1 server through the Web Application Proxy, as shown in Figure 17.</p>
@@ -2304,7 +2410,15 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <div class="content">
 <a class="image" href="images/image18.png"><img src="images/image18.png" alt="Additional13" width="315" height="353"></a>
 </div>
-<div class="title">Figure 17. Connected to the published application</div>
+<div class="title">Figure 16. Connected to the published application</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_customer_responsibility">Customer responsibility</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>After you successfully deploy this Quick Start, confirm that your resources and services are updated and configured — including any required patches — to meet your security and other needs. For more information, see the <a href="https://aws.amazon.com/compliance/shared-responsibility-model/" target="_blank" rel="noopener">AWS Shared Responsibility Model</a>.</p>
 </div>
 </div>
 </div>
@@ -2320,7 +2434,7 @@ When you set <strong>Rollback on failure</strong> to <strong>Disabled</strong>, 
 <h2 id="_quick_start_reference_deployments">Quick Start reference deployments</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>See the <a href="https://aws.amazon.com/quickstart/">AWS Quick Start home page</a>.</p>
+<p>See the <a href="https://aws.amazon.com/quickstart/" target="_blank" rel="noopener">AWS Quick Start home page</a>.</p>
 </div>
 </div>
 </div>
@@ -2349,8 +2463,19 @@ and to share your customizations with others.</p>
 </div>
 <p class="footer-text">
 <!-- We can use document attributes: -->
-<!-- Generated with Asciidoctor v2.0.12. -->
+<!-- Generated with Asciidoctor v2.0.16. -->
 <a href="https://aws.amazon.com/privacy/">Privacy</a> | <a href="https://aws.amazon.com/terms/">Site terms</a> | &copy; 2021, Amazon Web Services, Inc. or its affiliates. All rights reserved.
 </p>
 </body>
 </html>
+<!--
+repo commit:
+bed3ea96a8bc7e25f324c38a96be1c2aee92c8fe
+
+submodule config:
+ 4b446ee8ff99a231295d8e38ebff4bcb68325bd9 docs/boilerplate (remotes/origin/cdk-27-g4b446ee)
+ b7aefd089e944d77cdc2b083886cdc498d2a6ee4 submodules/quickstart-aws-vpc (v1.0-59-gb7aefd0)
+ 7c7b86e2c7397d5210d19758f8e3e75c60fd1bde submodules/quickstart-microsoft-activedirectory (heads/main)
+ f282fbb4e807dd4b4044244361d260c4f206bf0c submodules/quickstart-microsoft-rdgateway (heads/main)
+ 1a304a96c2e934f48a8f21b7716c392b299bcc8e submodules/quickstart-microsoft-utilities (heads/main)
+-->

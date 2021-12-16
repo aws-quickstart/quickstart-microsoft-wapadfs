@@ -1,38 +1,50 @@
 
-.Network Configuration
+.Network configuration
 [width="100%",cols="16%,11%,73%",options="header",]
 |===
 |Parameter label (name) |Default value|Description|VPC CIDR
-(`VPCCIDR`)|`10.0.0.0/16`|CIDR Block used by the VPC|VPC ID
-(`VPCID`)|`**__Requires input__**`|ID of the VPC (e.g., vpc-0343606e)|Private Subnet 1 ID
-(`PrivateSubnet1ID`)|`**__Requires input__**`|ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)|Private Subnet 2 ID
-(`PrivateSubnet2ID`)|`**__Requires input__**`|ID of the private subnet 2 in Availability Zone 2 (e.g., subnet-a0246dcd)|Public Subnet 1 ID
-(`PublicSubnet1ID`)|`**__Requires input__**`|ID of the public subnet 1 in Availability Zone 1 (e.g., subnet-e3246d8e)|Public Subnet 2 ID
+(`VPCCIDR`)|`10.0.0.0/16`|CIDR Block of the VPC|VPC ID
+(`VPCID`)|`**__Requires input__**`|ID of the VPC (e.g., vpc-0343606e)|Private subnet 1 ID
+(`PrivateSubnet1ID`)|`**__Requires input__**`|ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)|Private subnet 2 ID
+(`PrivateSubnet2ID`)|`**__Requires input__**`|ID of the private subnet 2 in Availability Zone 2 (e.g., subnet-a0246dcd)|Public subnet 1 ID
+(`PublicSubnet1ID`)|`**__Requires input__**`|ID of the public subnet 1 in Availability Zone 1 (e.g., subnet-e3246d8e)|Public subnet 2 ID
 (`PublicSubnet2ID`)|`**__Requires input__**`|ID of the public subnet 2 in Availability Zone 2 (e.g., subnet-e3246d8e)
 |===
-.Amazon EC2 Configuration
+.Amazon EC2 configuration
 [width="100%",cols="16%,11%,73%",options="header",]
 |===
-|Parameter label (name) |Default value|Description|Key Pair Name
-(`KeyPairName`)|`**__Requires input__**`|Public/private key pairs allow you to securely connect to your instance after it launches|WAP and ADFS Server Instance Type
-(`WAPADFSInstanceType`)|`c4.2xlarge`|Amazon EC2 instance type for the WAP and ADFS Servers|SSM Parameter to Grab Latest AMI ID
-(`LatestAmiId`)|`/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base`|NO_DESCRIPTION
+|Parameter label (name) |Default value|Description|Key pair name
+(`KeyPairName`)|`**__Requires input__**`|Public/private key pairs allow you to securely connect to your instance after it launches|SSM parameter to for latest AMI ID
+(`LatestAmiId`)|`/aws/service/ami-windows-latest/Windows_Server-2022-English-Full-Base`|Systems Manager parameter value for latest Windows Server AMI|KMS Key for EBS encryption
+(`EbsEncryptionKmsKeyId`)|`alias/aws/ebs`|The identifier of the AWS KMS key to use for Amazon EBS encryption. You can specify the KMS key using any of the following; Key ID, Key alias, Key ARN, Alias ARN
 |===
-.Microsoft Active Directory Configuration
+.Microsoft Active Directory Domain Services configuration
 [width="100%",cols="16%,11%,73%",options="header",]
 |===
-|Parameter label (name) |Default value|Description|Domain DNS Name
-(`DomainDNSName`)|`example.com`|Fully qualified domain name (FQDN) of the forest root domain e.g. corp.example.com|Domain NetBIOS Name
-(`DomainNetBIOSName`)|`example`|NetBIOS name of the domain (upto 15 characters) for users of earlier versions of Windows e.g. CORP|Domain Admin User Name
-(`DomainAdminUser`)|`StackAdmin`|User name for the account that will be added as Domain Administrator. This is separate from the default "Administrator" account|Domain Admin Password
-(`DomainAdminPassword`)|`**__Requires input__**`|Password for the domain admin user. Must be at least 8 characters containing letters, numbers and symbols|Domain Member Security Group ID
+|Parameter label (name) |Default value|Description|Active Directory Domain Services type
+(`DirectoryType`)|`SelfManaged`|Type of Active Directory the WAP / ADFS deployment will be integrated with, AWS Managed Microsoft AD or Self Managed AD|IP the instances will use for DNS (must be accessible)
+(`DomainController1IP`)|`10.0.0.10`|IP of DNS server that can resolve Active Directory domain (Must be accessible)|IP the instances will use for DNS (must be accessible)
+(`DomainController2IP`)|`10.0.32.10`|IP of DNS server that can resolve Active Directory domain (Must be accessible)|Domain DNS name
+(`DomainDNSName`)|`example.com`|Fully qualified domain name (FQDN) of the domain the WAP / ADFS instances will join e.g. corp.example.com|Domain NetBIOS name
+(`DomainNetBIOSName`)|`example`|NetBIOS name of the domain the WAP / ADFS instances will join (up to 15 characters) for users of earlier versions of Windows e.g. CORP|Secret ARN containing Administrator credentials
+(`DomainAdminUserSecret`)|`**__Requires input__**`|ARN for the Administrator credentials Secret with "username" and "password" key pairs. This account must be a member of Domain Admins with Self-Managed directories or a member of AWS Delegated Administrators with AWS Managed Microsoft AD.|Domain member security group ID
 (`DomainMemberSGID`)|`**__Requires input__**`|ID of the Domain Member Security Group (e.g., sg-7f16e910)
 |===
-.AWS Quick Start Configuration
+.ADFS and WAP configuration
 [width="100%",cols="16%,11%,73%",options="header",]
 |===
-|Parameter label (name) |Default value|Description|Quick Start S3 Bucket Name
+|Parameter label (name) |Default value|Description|WAP and ADFS server instance type
+(`WAPADFSInstanceType`)|`m5.large`|Amazon EC2 instance type for the WAP and ADFS Instances|ADFS server 1 NetBIOS name
+(`Adfs1NetBIOSName`)|`ADFS1`|First ADFS Server NetBIOS Name|ADFS server 2 NetBIOS name
+(`Adfs2NetBIOSName`)|`ADFS2`|Second ADFS Server NetBIOS Name|WAP server 1 NetBIOS name
+(`Wap1NetBIOSName`)|`WAP1`|First WAP Server NetBIOS Name|WAP server 2 NetBIOS name
+(`Wap2NetBIOSName`)|`WAP2`|Second WAP Server NetBIOS Name
+|===
+.AWS Quick Start configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Quick Start S3 bucket name
 (`QSS3BucketName`)|`aws-quickstart`|S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).|Quick Start S3 bucket region
-(`QSS3BucketRegion`)|`us-east-1`|The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.|Quick Start S3 Key Prefix
+(`QSS3BucketRegion`)|`us-east-1`|The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.|Quick Start S3 key prefix
 (`QSS3KeyPrefix`)|`quickstart-microsoft-wapadfs/`|S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
 |===
