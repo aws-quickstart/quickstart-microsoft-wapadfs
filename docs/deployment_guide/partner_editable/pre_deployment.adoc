@@ -2,7 +2,7 @@
 
 == Predeployment steps
 
-If you are deploying the WAP ADFS Quick Start into an existing VPC, ensure your Active Directory environment includes at least one certificate authority (CA). If you are using AWS Managed Microsoft Active Directory this will require you to have at least one domain-joined server that can be configured as the CA, since AWS Managed Microsoft Active Directory does not act as a CA natively. A domain-joined server can be promoted to a CA by executing the following PowerShell code from an elevated command prompt:
+If you are deploying the WAP ADFS Quick Start into an existing VPC, ensure that your Active Directory environment includes at least one certificate authority (CA). If you are using AWS Managed Microsoft Active Directory this will require you to have at least one domain-joined server that can be configured as the CA, since AWS Managed Microsoft Active Directory does not act natively as a CA. To promote a domain-joined server to a CA, run the following PowerShell code from an elevated command prompt:
 
 ----
 Add-WindowsFeature Adcs-Cert-Authority -IncludeManagementTools

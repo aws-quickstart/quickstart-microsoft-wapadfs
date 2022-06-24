@@ -3,7 +3,7 @@
 :partner-product-name: Web Application Proxy and AD FS
 :partner-product-short-name: WAP and AD FS
 //:partner-company-name: Example Company Name, Ltd.
-:doc-month: June
+:doc-month: July
 :doc-year: 2022
 //:partner-contributors: John Smith, {partner-company-name}
 // :other-contributors: Akua Mansa, Trek10

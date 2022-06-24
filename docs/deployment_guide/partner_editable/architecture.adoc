@@ -10,15 +10,17 @@ AWS Cloud.
 [link=images/architecture_diagram.png]
 image::../docs/deployment_guide/images/architecture_diagram.png[Architecture,width=100%,height=100%]
 
-The AWS CloudFormation template creates a fully functional AD FS federation server farm with Web Application Proxy on the AWS Cloud. The template deploys the following components:
+As shown in <<architecture1>>, this Quick Start deploys the following:
 
-* A virtual private cloud (VPC) with resources distributed across two Availability Zones for high availability.*
-* Public subnets in each Availability Zone that provide access to and from the internet. The public subnets include network address translation (NAT) gateway instances for outbound internet access, and Remote Desktop Gateway (RD Gateway) instances in an Auto Scaling group for inbound remote administrative access. Web Application Proxy servers are deployed in the public subnets to help provide secure inbound connectivity to web applications.*
-* Private subnets in each Availability Zone for running enterprise workloads such as Active Directory domain controllers and AD FS servers, shielded from direct access over the internet.*
-* In the private subnets, domain controllers that act as enterprise certificate authorities (CAs) that issue the required SSL certificates to the AD FS infrastructure. For production deployments, you might want to consider commercial certificates issued from a public CA, and we’ll cover this in greater detail later in this guide.
-* In the private subnets, two AD FS servers running on Windows Server 2022, which are deployed in each Availability Zone to support high availability and load distribution.
-* Security groups to tightly control the flow of traffic between your Amazon EC2 instances.
+* A highly available architecture that spans two Availability Zones.*
+* A virtual private cloud (VPC) configured with public and private subnets, according to AWS best practices, to provide you with your own virtual network on AWS.*
+* In the public subnets:
+** Managed network address translation (NAT) gateways to allow outbound internet access for resources in the private subnets.*
+** Microsoft Remote Desktop Gateway (RD Gateway) instances in an Auto Scaling group to provide inbound remote administrative access.*
+** Web Application Proxy servers to provide secure inbound connectivity to web applications.
+* In the private subnets:
+** Two Active Directory domain controllers in a security group. These act as enterprise certificate authorities (CAs) to issue required SSL certificates to the AD FS infrastructure. For production deployments, consider using commercial certificates issued by a public CA.
+** Two Active Directory Federation Services (AD FS) servers in a security group running on Windows Server 2022. 
 
-*The template that deploys the Quick Start into an existing VPC skips
-the components marked by asterisks and prompts you for your existing VPC
-configuration.
+*The template that deploys the Quick Start into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.
+
