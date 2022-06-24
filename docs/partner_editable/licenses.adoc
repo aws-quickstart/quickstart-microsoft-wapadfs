@@ -1,4 +1,0 @@
-// Include details about the license and how they can sign up. If no license is required, clarify that. 
-
-This Quick Start deploys AWS EC2 instances running Microsoft Windows, and the cost of the Windows licenses is included in the cost of the EC2 instances.
-All roles and functionality deployed on top of the Windows instances are included in the cost of the Windows licenses.
