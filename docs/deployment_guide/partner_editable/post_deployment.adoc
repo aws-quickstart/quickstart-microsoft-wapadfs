@@ -275,63 +275,56 @@ image::../images/image18.png[Additional13,image,width=315,height=353]
 
 *AWS services*
 
-* AWS CloudFormation +
-https://aws.amazon.com/documentation/cloudformation/
-* Amazon EBS
+* https://aws.amazon.com/documentation/cloudformation/[AWS CloudFormation]
 
-* User guide: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html
-* Volume types: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html
-* Optimized instances: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSOptimized.html
+* https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html[Amazon Elastic Block Store (Amazon EBS)]
 
-* Amazon EC2
+* https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/[Amazon EC2]
 
-* User guide for Microsoft Windows: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/
+* http://aws.amazon.com/documentation/vpc/[Amazon VPC]
 
-* Amazon VPC +
-http://aws.amazon.com/documentation/vpc/
 
 *Microsoft Web Application Proxy and AD FS*
 
-* Planning for AD FS Server Capacity +
-https://technet.microsoft.com/en-us/library/gg749899.aspx
-* Planning to Publish Applications Using Web Application Proxy +
-https://technet.microsoft.com/en-us/library/dn383650.aspx
-* Configure the Web Application Proxy Infrastructure +
-https://technet.microsoft.com/en-us/library/dn383644.aspx
-* Install and Configure the Web Application Proxy Server +
-https://technet.microsoft.com/en-us/library/dn383662.aspx
-* Publish Applications using AD FS Preauthentication +
-https://technet.microsoft.com/en-us/library/dn383640.aspx
-* Publish Applications using Pass-through Preauthentication +
-https://technet.microsoft.com/en-us/library/dn383639.aspx
-* Enabling Federation to AWS using Windows Active Directory, ADFS, and SAML 2.0 +
-https://blogs.aws.amazon.com/security/post/Tx71TWXXJ3UI14/Enabling-Federation-to-AWS-using-Windows-Active-Directory-ADFS-and-SAML-2-0
+* https://technet.microsoft.com/en-us/library/gg749899.aspx[Planning for AD FS Server Capacity]
+
+* https://technet.microsoft.com/en-us/library/dn383650.aspx[Planning to Publish Applications Using Web Application Proxy]
+
+* https://technet.microsoft.com/en-us/library/dn383644.aspx[Configure the Web Application Proxy Infrastructure]
+
+* https://technet.microsoft.com/en-us/library/dn383662.aspx[Install and Configure the Web Application Proxy Server]
+
+* https://technet.microsoft.com/en-us/library/dn383640.aspx[Publish Applications using AD FS Preauthentication]
+
+* https://technet.microsoft.com/en-us/library/dn383639.aspx[Publish Applications using Pass-through Preauthentication]
+
+* https://blogs.aws.amazon.com/security/post/Tx71TWXXJ3UI14/Enabling-Federation-to-AWS-using-Windows-Active-Directory-ADFS-and-SAML-2-0[Enabling Federation to AWS using Windows Active Directory, ADFS, and SAML 2.0]
+
 
 *Deploying Microsoft software on AWS*
 
-* Microsoft on AWS +
-https://aws.amazon.com/microsoft/
-* Secure Microsoft applications on AWS +
-https://d0.awsstatic.com/whitepapers/aws-microsoft-platform-security.pdf
-* Microsoft Licensing Mobility +
-https://aws.amazon.com/windows/mslicensemobility/
-* MSDN on AWS +
-https://aws.amazon.com/windows/msdn/
-* AWS Windows and .NET Developer Center +
-https://aws.amazon.com/net/
+* https://aws.amazon.com/microsoft/[Microsoft on AWS]
+
+* https://d0.awsstatic.com/whitepapers/aws-microsoft-platform-security.pdf[Secure Microsoft applications on AWS]
+
+* https://aws.amazon.com/windows/mslicensemobility/[Microsoft Licensing Mobility]
+
+* https://aws.amazon.com/windows/msdn/[MSDN on AWS]
+
+* https://aws.amazon.com/net/[AWS Windows and .NET Developer Center]
+
 
 *Tools*
 
-* Best Practices Analyzer for Web Application Proxy +
-https://technet.microsoft.com/en-us/library/dn383651.aspx
-* Load-balancing solutions in the AWS Marketplace +
-https://aws.amazon.com/marketplace/
+* https://technet.microsoft.com/en-us/library/dn383651.aspx[Best Practices Analyzer for Web Application Proxy]
+
+* https://aws.amazon.com/marketplace/[Load-balancing solutions in the AWS Marketplace]
+
 
 *Associated Quick Start reference deployments*
 
-* Microsoft Active Directory on AWS +
-https://docs.aws.amazon.com/quickstart/latest/active-directory-ds/
-* Microsoft Remote Desktop Gateway on AWS +
-https://docs.aws.amazon.com/quickstart/latest/rd-gateway/
-* Additional reference deployments +
-https://aws.amazon.com/quickstart/ [[_Appendix:_Publishing_Outlook]]
+* https://fwd.aws/NvamP?[Microsoft Exchange on the AWS Cloud]
+
+* https://fwd.aws/N6e7B?[Active Directory Domain Services on the AWS Cloud]
+
+* https://fwd.aws/5VrKP?[Remote Desktop Gateway on AWS]
