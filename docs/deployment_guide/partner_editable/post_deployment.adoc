@@ -2,6 +2,7 @@
 
 // == Postdeployment steps
 
+:xrefstyle: short
 === Run windows updates
 
 In order to ensure the deployed servers' operating systems and installed applications have the latest Microsoft updates, run Windows Update on each server.
@@ -18,7 +19,7 @@ In order to ensure the deployed servers' operating systems and installed applica
 Although this Quick Start is designed for to support 1,000 to 15,000 users, there are a number of options. The following recommendations can help determine the minimum number of servers to deploy for your scenario. These recommendations are based on a hardware profile that supports 8 CPU cores, 4 GiB of RAM, and a 1 gigabit network connection.
 
 * *Fewer than 1,000 users* – A small environment can use existing infrastructure instead of running dedicated AD FS servers. If you need to support fewer than 1,000 users, you can install AD FS on at least two of your domain controllers. Ideally, these domain controllers should be in two separate Availability Zones.
-* *1,000 to 15,000 users* – In this scenario, Microsoft recommends using a dedicated AD FS and WAP server infrastructure. The AD FS database can run using a Windows Internal Database (WID), so you’ll need four servers (two WAP, two AD FS) in this architecture, as shown in Figure 1.
+* *1,000 to 15,000 users* – In this scenario, Microsoft recommends using a dedicated AD FS and WAP server infrastructure. The AD FS database can run using a Windows Internal Database (WID), so you’ll need four servers (two WAP and two AD FS).
 * *15,000 to 60,000 users* – For large environments, Microsoft recommends using three to five dedicated AD FS servers, and at least two dedicated WAP servers. Note that if you’re scaling beyond five dedicated AD FS servers, you’ll need a dedicated SQL Server instance instead of running a WID.
 
 [[selecting-an-instance-type]]
@@ -72,7 +73,7 @@ Certificates are required to install both the WAP and AD FS components. This Qui
 
 As your WAP servers are deployed to public subnets, you may choose not to join them to a domain. This is a typical practice for server workloads running in a perimeter zone. However, if the web application you want to publish must support Integrated Windows authentication, you should join the WAP servers.
 
-This Quick Start automatically joins the WAP servers to the Active Directory Domain Services environment. For help publishing a web application that uses Integrated Windows authentication, refer to <<Publish an Outlook web app to the internet with AD FS pre-authentication>>, later in this guide.
+This Quick Start automatically joins the WAP servers to the Active Directory Domain Services environment. For help publishing a web application that uses Integrated Windows authentication, refer to <<Publish Outlook on the web with AD FS preauthentication>>, later in this guide.
 
 [[authentication-scenarios]]
 === Authentication Scenarios
@@ -83,7 +84,7 @@ Publishing web applications with WAP supports three authentication scenarios:
 * *Client certificate preauthentication* – In this scenario, one or more external servers connect to an on-premises web application through the WAP infrastructure using a certificate for authentication. Despite the name, this scenario should not be used for client devices that connect to a published web application. For more information, see https://technet.microsoft.com/en-us/library/dn584096.aspx[Publish Applications using Client Certificate Preauthentication].
 * *Pass-through preauthentication* – In this scenario, access to the web application is proxied directly to the backend server without preauthentication against AD FS. This is the option you would use to make AD FS externally accessible. Subsequently published applications that use AD FS preauthentication access AD FS via pass-through preauthentication.
 
-For an example that covers both AD FS and pass-through preauthentication, refer to <<Publish an Outlook web app to the internet with AD FS pre-authentication>>, later in this guide.
+For an example that covers both AD FS and pass-through preauthentication, refer to <<Publish Outlook on the web with AD FS preauthentication>>, later in this guide.
 
 == Security
 
@@ -97,159 +98,178 @@ All the Windows Servers deployed by this Quick Start are domain-joined. You can 
 [[security-groups]]
 === Security Groups
 
-A _security group_ acts as a firewall that controls the traffic for one or more instances. When you launch an instance, you associate one or more security groups with the instance. You add rules to each security group that allow traffic to or from its associated instances. You can modify the rules for a security group at any time. The new rules are automatically applied to all instances that are associated with the security group.
+A security group acts as a firewall that controls the traffic for one or more instances. When you launch an instance, you associate one or more security groups with the instance. You add rules to each security group that allow traffic to or from its associated instances. You can modify the rules for a security group at any time. The new rules are automatically applied to all instances that are associated with the security group.
 
 The security groups created and assigned to the individual instances as part of this solution are restricted as much as possible while allowing access to the various functions needed by AD FS and WAP. After deployment, review security groups and further restrict access as needed.
 
 == Publish Outlook on the web with AD FS preauthentication
 
-Instead of using the nested AWS CloudFormation template to launch a new environment, you can use the https://fwd.aws/YAkEy[Web Application Proxy and AD FS template] included with this Quick Start to launch the components into an existing VPC.
+This section demonstrates how to launch the WAP and AD FS infrastructure on top of the Exchange Server Quick Start. Then we’ll walk through the steps to publish OWA to the internet using WAP and AD FS.
 
-*Important* The subtemplate for WAP and AD FS provided with this guide is built to work with existing VPCs that have two public and two private subnets, and an existing Active Directory Domain Services implementation. More specifically, it is designed to work with the existing Microsoft-based AWS Quick Starts, such as Exchange Server, SharePoint Server, and Lync Server.
+IMPORTANT: The subtemplate for WAP and AD FS provided with this guide is built to work with existing VPCs that have two public and two private subnets, and an existing Active Directory Domain Services implementation. More specifically, it is designed to work with the existing Microsoft-based AWS Quick Starts, such as Exchange Server, SharePoint Server, and Lync Server.
 
-In this appendix, we’ll show you how to launch the WAP and AD FS infrastructure on top of the Exchange Server Quick Start. Then we’ll walk through the steps to publish OWA to the internet using WAP and AD FS.
+NOTE: This walkthrough explains the process of publishing OWA using Integrated Windows authentication. You can follow the same general process for Exchange Server 2010, or other web applications you want to publish with Integrated Windows authentication. It is also possible to publish OWA with claims-based authentication using Exchange Server 2013 SP1 or newer, but that scenario is beyond the scope of this guide.
 
-*Note* This walkthrough explains the process of publishing OWA using Integrated Windows authentication. You can follow the same general process for Exchange Server 2010, or other web applications you want to publish with Integrated Windows authentication. It is also possible to publish OWA with claims-based authentication using Exchange Server 2013 SP1 or newer, but that scenario is beyond the scope of this guide.
+=== Deploy Quick Start templates
 
-1.  Launch the https://fwd.aws/NvamP[Exchange Server Quick Start].
+. Deploy the https://fwd.aws/NvamP[Microsoft Exchange on the AWS Cloud Quick Start].
 
-2.  Once the Exchange Server 2019 stack has been created successfully, launch the https://fwd.aws/5VrKP[Web Application Proxy and AD FS template]. As shown previously in this guide, specify the `KeyPairName` for your chosen AWS Region. Also specify the IDs for your existing VPC and for the public and private subnets.
+. Deploy the https://fwd.aws/5VrKP[Web Application Proxy and AD FS template]. During deployment, specify the `KeyPairName` for your chosen AWS Region and the IDs for your existing VPC and public and private subnets.
 
-3.  Initiate a Remote Desktop Protocol (RDP) connection to one of the RD Gateway instances. You can retrieve the Elastic IP for the RD Gateway servers in the Amazon EC2 console. From there, use RDP to connect to the EXCH1 server.
+=== Connect to a RD Gateway instance
 
-4.  On EXCH1, navigate to the Exchange Admin Center (https://exch1/ecp) in a web browser. Sign in by using the `stackadmin` user account and password you specified when building the stack.
+. Initiate a Remote Desktop Protocol (RDP) connection to one of the deployed RD Gateway instances. You can retrieve the Elastic IP address (EIP) of the RD Gateway servers from the https://us-east-1.console.aws.amazon.com/ec2/v2/home?region=us-east-1#Home:[Amazon EC2 console]. Use RDP to connect to the first Exchange server (`exch1`).
 
+. On the first Exchange server (`exch1`), navigate to the https://exch1/ecp[Exchange Admin Center] in a web browser. Sign in using the `stackadmin` user account and password you specified when deploying the Microsoft Exchange on AWS stack.
+
++
 [#Additional1]
 .Logging into the Exchange Admin Center
 [link=images/image6.png]
 image::../images/image6.png[Additional1,image,width=532,height=299]
 
 [start=5]
-5.  In the left pane, choose *Servers*, *Virtual directories*.
+. In the left navigation pane, under *Servers*, choose *Virtual directories*.
 
++
 [#Additional2]
 .Viewing the virtual directories on EXCH1
 [link=images/image7.png]
 image::../images/image7.png[Additional2,image,width=546,height=308]
 
 [start=6]
-6.  Double-click *owa (Default Web Site)* on the EXCH1 server. Choose *Authentication*, *Integrated Windows authentication*, and then choose *Save*. You should also change the corresponding setting on the ECP virtual directory on EXCH1.
+. Choose *owa (Default Web Site)* on the EXCH1 server. Choose *Authentication*, *Integrated Windows authentication*, and then choose *Save*. You should also change the corresponding setting on the ECP virtual directory on EXCH1.
 
++
 [#Additional3]
 .Setting OWA authentication to Integrated Windows
 [link=images/image8.png]
 image::../images/image8.png[Additional3,image,width=480,height=302]
 
-*Note* In a load-balanced production environment, you would modify this setting on each Exchange server that is running the Client Access role.
+NOTE: In a load-balanced production environment, modify this setting on each Exchange server that is running the Client Access role.
 
-[start=7]
-7.  Establish an RDP connection to the ADFS1 server. In *Control Panel*, choose *Administrative Tools*, and then launch the *ADFS Management* snap-in.
+=== Connect to the ADFS1 server
 
-8.  Open the context (right-click) menu for *Trust Relationships*, and then choose *Add Non-Claims-Aware Relying Party Trust* to start the wizard.
+. Establish an RDP connection to the ADFS1 server. In *Control Panel*, choose *Administrative Tools*, and then launch the *ADFS Management* snap-in.
 
+. Start the wizard. Open the context (right-click) menu for *Trust Relationships*, and then choose *Add Non-Claims-Aware Relying Party Trust*.
+
++
 [#Additional4]
 .Adding a non-claims-aware relying party trust
 [link=images/image9.png]
 image::../images/image9.png[Additional4,image,width=446,height=241]
 
-[start=9]
-9.  On the welcome page of the wizard, choose *Start*, and type a display name such as *OWA*. Provide a unique identifier string for the non-claims-aware relying party trust. Use the default service name created by the Quick Start (e.g., http://sts.example.com/adfs/services/trust) for the URL.
+[start=3]
+. Choose *Start*. Enter a display name such as `OWA`. Provide a unique identifier string for the non-claims-aware relying party trust. Use the default service name created by the Quick Start (for example, `\http://sts.example.com/adfs/services/trust`) for the URL.
 
-10.  Indicate that you do not want to configure multi-factor authentication, and then choose *Next*.
+. Indicate that you do not want to configure multifactor authentication, and then choose *Next*.
 
-11.  Go through the remaining screens without making changes. On the final screen, leave the *Open the Edit Issuance Authorization Rules* option selected, and then choose *Close*.
+. Go through the remaining screens without making changes. On the final screen, select  *Open the Edit Issuance Authorization Rules* and then choose *Close*.
 
-12.  On the *Edit Claim Rules* screen, choose *Add Rule*, *Permit Access to All Users*, and then choose *Finish*.
+. On the *Edit Claim Rules* screen, choose *Add Rule*, *Permit Access to All Users*, and then choose *Finish*.
 
-13.  Establish an RDP connection to the WAP1 server. In *Control Panel*, choose *Administrative Tools*, and then launch the *Remote Access Management* snap-in.
+=== Connect to the WAP1 server
+
+Establish an RDP connection to the WAP1 server. In *Control Panel*, choose *Administrative Tools*, and then launch the *Remote Access Management* snap-in.
 
 [#Additional5]
 .Viewing the Remote Access Management console
 [link=images/image10.png]
 image::../images/image10.png[Additional5,image,width=603,height=145]
 
+=== Publish OWA 
+
 To publish OWA to the internet, you’ll need to create two rules. The first rule will be a pass-through authentication rule to the AD FS server. This will allow users to pre-authenticate before being connected to OWA.
 
-[start=14]
-14.  Under *Tasks*, choose *Publish*.
+.  Under *Tasks*, choose *Publish*.
 
-15.  On the Welcome screen, choose *Next*. On the *Preauthentication* tab, choose *Pass-through*.
+.  On the Welcome screen, choose *Next*. On the *Preauthentication* tab, choose *Pass-through*.
 
++
 [#Additional6]
 .Selecting the pass-through pre-authentication method
 [link=images/image11.png]
 image::../images/image11.png[Additional6,image,width=486,height=183]
 
-[start=16]
-16.  Provide a name such as ADFS for the rule. Specify the external URL, the external certificate, and the back-end server URL as shown in Figure 11.
+[start=3]
+.  Provide a name for the rule (for example, `ADFS`). Specify the external URL, the external certificate, and the backend server URL as shown in <<Additional7>>.
 
++
 [#Additional7]
 .Configuring the publishing rule
 [link=images/image12.png]
 image::../images/image12.png[Additional7,image,width=488,height=233]
 
-*Note* If you’ve implemented internal load balancing for the AD FS tier, you can set the back-end server URL to a load-balanced endpoint instead of an individual server name.
++
+*Note* If you’ve implemented internal load balancing for the AD FS tier, you can set the backend server URL to a load-balanced endpoint instead of an individual server name.
 
-[start=17]
-17.  Choose *Publish,* and then *Close* to exit the wizard.
+[start=4]
+.  Choose *Publish,* and then *Close* to exit the wizard.
 
-18.  Choose *Publish* again to create a new rule for OWA. This time, set the pre-authentication method to *Active Directory Federation Services (AD FS)*, and then choose *Next*.
+.  Choose *Publish* again to create a new rule for OWA. This time, set the preauthentication method to *Active Directory Federation Services (AD FS)*, and then choose *Next*.
 
++
 [#Additional8]
 .Selecting the AD FS pre-authentication method
 [link=images/image13.png]
 image::../images/image13.png[Additional8,image,width=488,height=233]
 
-[start=19]
-19.  For the relying party for the application, select the relying party trust you created on the AD FS server, and then choose *Next*.
+[start=6]
+.  For the relying party for the application, select the relying party trust you created on the AD FS server, and then choose *Next*.
 
++
 [#Additional9]
 .Selecting the relying party
 [link=images/image14.png]
 image::../images/image14.png[Additional9,image,width=488,height=233]
 
-[start=20]
-20.  Provide a name such as OWA for the rule. Specify the external URL, external certificate, back-end URL, and service principal name (SPN) for the back-end server, as shown in Figure 14.
+[start=7]
+. Provide a name such as OWA for the rule. Specify the external URL, external certificate, backend URL, and service principal name (SPN) for the backend server, as shown in <<Additional10>>.
 
++
 [#Additional10]
 .Configuring rule details
 [link=images/image15.png]
 image::../images/image15.png[Additional10,image,width=488,height=233]
 
-*Note* If you’ve implemented internal load balancing for the Exchange client access tier, you can set the back-end server URL and SPN to a load-balanced endpoint instead of an individual server name.
+NOTE: If you’ve implemented internal load balancing for the Exchange client access tier, you can set the backend server URL and SPN to a load-balanced endpoint instead of an individual server name.
 
-[start=21]
-21.  Choose *Publish* and close the wizard.
+[start=8]
+. Choose *Publish* and close the wizard.
 
-22.  Establish an RDP connection to DC1. In *Control Panel*, choose *Administrative Tools*, and then launch the *Active Directory Users and Computers* snap-in.
+. Establish an RDP connection to DC1. In *Control Panel*, choose *Administrative Tools*, and then launch the *Active Directory Users and Computers* snap-in.
 
-23.  Navigate to the *Computers* container, right-click the WAP1 computer, and then choose *Properties*. On the *Delegation* tab, choose *Trust this computer for delegation to specified services only*. Check the option to use any authentication protocol, and add the HTTP service type on the EXCH1 computer to the list, as shown in Figure 15. Choose *Apply*, and then choose *OK*.
+. Navigate to the *Computers* container, right-click the WAP1 computer, and then choose *Properties*. On the *Delegation* tab, choose *Trust this computer for delegation to specified services only*. Check the option to use any authentication protocol, and add the HTTP service type on the EXCH1 computer to the list, as shown in Figure 15. Choose *Apply*, and then choose *OK*.
 
++
 [#Additional11]
 .Configuring Kerberos constrained delegation
 [link=images/image16.png]
 image::../images/image16.png[Additional11,image,width=315,height=353]
 
+=== Test OWA access
+
 Now you are ready to test accessing OWA from an external workstation or server over the internet.
 
-[start=24]
-24.  If you did not use your own domain name, you’ll need to edit the hosts file on your machine to allow your computer to resolve the endpoints at example.com: Add a mapping for *sts.example.com* and *mail.example.com* to your local hosts file, making sure that both hosts resolve to the public EIP of the WAP1 server.
+. If you did not use your own domain name, you’ll need to edit the hosts file on your machine to allow your computer to resolve the endpoints at `example.com`. Add a mapping for `sts.example.com` and `mail.example.com` to your local hosts file. Ensure that both hosts resolve to the public EIP of the WAP1 server.
 
-25.  Open a web browser from your external workstation or server. Navigate to *mail.example.com*. You should be redirected to the federation service and prompted for authentication. Provide the stackadmin user name and password, and then choose *Sign in*.
+. Open a web browser from your external workstation or server. Navigate to `mail.example.com`. Sign in using the `stackadmin` user name and password.
 
++
 [#Additional12]
 .Pre-authenticating to AD FS
 [link=images/image17.png]
 image::../images/image17.png[Additional12,image,width=315,height=353]
 
-If the authentication is successful, the connection should be proxied to the EXCH1 server through the Web Application Proxy, as shown in Figure 17.
++
+If the authentication is successful, the connection should be proxied to the EXCH1 server through WAP, as shown in <<Additional13>>.
 
++
 [#Additional13]
 .Connected to the published application
 [link=images/image18.png]
 image::../images/image18.png[Additional13,image,width=315,height=353]
-
-
 
 == Additional resources
 
