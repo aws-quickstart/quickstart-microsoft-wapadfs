@@ -70,20 +70,20 @@ Certificates are required to install both the WAP and AD FS components. This Qui
 [[domain-joined-proxies]]
 === Domain-joined proxies
 
-As your Web Application Proxy servers are deployed to public subnets, you may choose not to join them to a domain. This is a typical practice for server workloads running in a perimeter zone. However, if the web application you want to publish must support Integrated Windows authentication, you should join the Web Application Proxy servers.
+As your WAP servers are deployed to public subnets, you may choose not to join them to a domain. This is a typical practice for server workloads running in a perimeter zone. However, if the web application you want to publish must support Integrated Windows authentication, you should join the WAP servers.
 
-This Quick Start automatically joins the Web Application Proxy servers to the Active Directory Domain Services environment. For help publishing a web application that uses Integrated Windows authentication, refer to <<Publish an Outlook web app to the internet with AD FS pre-authentication>>, later in this guide.
+This Quick Start automatically joins the WAP servers to the Active Directory Domain Services environment. For help publishing a web application that uses Integrated Windows authentication, refer to <<Publish an Outlook web app to the internet with AD FS pre-authentication>>, later in this guide.
 
 [[authentication-scenarios]]
 === Authentication Scenarios
 
-Publishing web applications with Web Application Proxy supports three authentication scenarios:
+Publishing web applications with WAP supports three authentication scenarios:
 
-* *AD FS pre-authentication* – In this scenario, users authenticate against AD FS before gaining access to the published web application. This requires that you add an AD FS relying party trust to the federation service. For detailed coverage on AD FS pre-authentication flow, see https://technet.microsoft.com/en-us/library/dn383640.aspx[Publish Applications using AD FS Preauthentication] in the Microsoft TechNet Library.
-* *Client certificate pre-authentication* – In this scenario, one or more external servers connect to an on-premises web application through the Web Application Proxy infrastructure using a certificate for authentication. Despite the name, this scenario should not be used for client devices that connect to a published web application. For more information, see https://technet.microsoft.com/en-us/library/dn584096.aspx[Publish Applications using Client Certificate Preauthentication] in the Microsoft TechNet Library.
-* *Pass-through pre-authentication* – In this scenario, access to the web application is proxied directly to the back-end server without pre-authentication against AD FS. For example, this is the option you would use to make AD FS externally accessible. Subsequently published applications that use AD FS pre-authentication will access AD FS via pass-through pre-authentication.
+* *AD FS preauthentication* – In this scenario, users authenticate against AD FS before gaining access to the published web application. This requires that you add an AD FS relying party trust to the federation service. For detailed coverage on AD FS preauthentication flow, see https://technet.microsoft.com/en-us/library/dn383640.aspx[Publish Applications using AD FS Preauthentication] in the Microsoft TechNet Library.
+* *Client certificate preauthentication* – In this scenario, one or more external servers connect to an on-premises web application through the WAP infrastructure using a certificate for authentication. Despite the name, this scenario should not be used for client devices that connect to a published web application. For more information, see https://technet.microsoft.com/en-us/library/dn584096.aspx[Publish Applications using Client Certificate Preauthentication].
+* *Pass-through preauthentication* – In this scenario, access to the web application is proxied directly to the backend server without preauthentication against AD FS. This is the option you would use to make AD FS externally accessible. Subsequently published applications that use AD FS preauthentication access AD FS via pass-through preauthentication.
 
-See the #_Appendix:_Publishing_Outlook[appendix] for an example that covers both AD FS and pass-through pre-authentication.
+For an example that covers both AD FS and pass-through preauthentication, refer to <<Publish an Outlook web app to the internet with AD FS pre-authentication>>, later in this guide.
 
 == Security
 
@@ -99,25 +99,25 @@ All the Windows Servers deployed by this Quick Start are domain-joined. You can 
 
 A _security group_ acts as a firewall that controls the traffic for one or more instances. When you launch an instance, you associate one or more security groups with the instance. You add rules to each security group that allow traffic to or from its associated instances. You can modify the rules for a security group at any time. The new rules are automatically applied to all instances that are associated with the security group.
 
-The security groups created and assigned to the individual instances as part of this solution are restricted as much as possible while allowing access to the various functions needed by AD FS and Web Application Proxy. We recommend that you review security groups and further restrict access as needed once the deployment is up and running.
+The security groups created and assigned to the individual instances as part of this solution are restricted as much as possible while allowing access to the various functions needed by AD FS and WAP. After deployment, review security groups and further restrict access as needed.
 
-== Publish an Outlook web app to the internet with AD FS pre-authentication
+== Publish Outlook on the web with AD FS preauthentication
 
 Instead of using the nested AWS CloudFormation template to launch a new environment, you can use the https://fwd.aws/YAkEy[Web Application Proxy and AD FS template] included with this Quick Start to launch the components into an existing VPC.
 
-*Important* The sub-template for Web Application Proxy and AD FS provided with this guide is built to work with existing VPCs that have two public and two private subnets, and an existing Active Directory Domain Services implementation. More specifically, it is designed to work with the existing Microsoft-based AWS Quick Starts, such as Exchange Server, SharePoint Server, and Lync Server.
+*Important* The subtemplate for WAP and AD FS provided with this guide is built to work with existing VPCs that have two public and two private subnets, and an existing Active Directory Domain Services implementation. More specifically, it is designed to work with the existing Microsoft-based AWS Quick Starts, such as Exchange Server, SharePoint Server, and Lync Server.
 
-In this appendix, we’ll show you how to launch the Web Application Proxy and AD FS infrastructure on top of the Exchange Server Quick Start. Then we’ll walk through the steps to publish Outlook Web App (OWA) to the internet using Web Application Proxy and AD FS.
+In this appendix, we’ll show you how to launch the WAP and AD FS infrastructure on top of the Exchange Server Quick Start. Then we’ll walk through the steps to publish OWA to the internet using WAP and AD FS.
 
-*Note* This walkthrough details the process of publishing OWA using Integrated Windows authentication. You can follow the same general process for Exchange Server 2010, or other web applications you want to publish with Integrated Windows authentication. It is also possible to publish OWA with claims-based authentication using Exchange Server 2013 SP1 or newer, but that scenario is beyond the scope of this guide.
+*Note* This walkthrough explains the process of publishing OWA using Integrated Windows authentication. You can follow the same general process for Exchange Server 2010, or other web applications you want to publish with Integrated Windows authentication. It is also possible to publish OWA with claims-based authentication using Exchange Server 2013 SP1 or newer, but that scenario is beyond the scope of this guide.
 
 1.  Launch the https://fwd.aws/NvamP[Exchange Server Quick Start].
 
-2.  Once the Exchange Server 2019 stack has been created successfully, launch the https://fwd.aws/5VrKP[Web Application Proxy and AD FS template]. As shown previously in this guide, you’ll need to specify the _KeyPairName_ for your chosen region. Additionally, you’ll need to specify the IDs for your existing VPC and for the public and private subnets.
+2.  Once the Exchange Server 2019 stack has been created successfully, launch the https://fwd.aws/5VrKP[Web Application Proxy and AD FS template]. As shown previously in this guide, specify the `KeyPairName` for your chosen AWS Region. Also specify the IDs for your existing VPC and for the public and private subnets.
 
 3.  Initiate a Remote Desktop Protocol (RDP) connection to one of the RD Gateway instances. You can retrieve the Elastic IP for the RD Gateway servers in the Amazon EC2 console. From there, use RDP to connect to the EXCH1 server.
 
-4.  On EXCH1, navigate to the Exchange Admin Center (https://exch1/ecp) in a web browser. Sign in by using the stackadmin user account and password you specified when building the stack.
+4.  On EXCH1, navigate to the Exchange Admin Center (https://exch1/ecp) in a web browser. Sign in by using the `stackadmin` user account and password you specified when building the stack.
 
 [#Additional1]
 .Logging into the Exchange Admin Center
