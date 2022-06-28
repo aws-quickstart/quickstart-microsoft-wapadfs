@@ -103,11 +103,11 @@ The security groups created and assigned to the individual instances as part of 
 
 == Publish Outlook on the web with AD FS preauthentication
 
-This section demonstrates how to launch the WAP and AD FS infrastructure on top of the Exchange Server Quick Start. Then we’ll walk through the steps to publish OWA to the internet using WAP and AD FS.
+In this section, you'll learn how to deploy WAP and AD FS infrastructure on top of the Microsoft Exchange on the AWS Cloud Quick Start and publish OWA to the internet using WAP and AD FS.
 
 IMPORTANT: The template for WAP and AD FS provided with this guide is built to work with existing VPCs that have two public and two private subnets, and an existing Active Directory Domain Services implementation. More specifically, it is designed to work with the existing Microsoft-based AWS Quick Starts, such as Exchange Server, SharePoint Server, and Lync Server.
 
-NOTE: This walkthrough explains the process of publishing OWA using Integrated Windows authentication. You can follow the same general process for Exchange Server 2010, or other web applications you want to publish with Integrated Windows authentication. It is also possible to publish OWA with claims-based authentication using Exchange Server 2013 SP1 or newer, but that scenario is beyond the scope of this guide.
+NOTE: In this section, the process of publishing OWA uses Integrated Windows authentication. You can follow the same general process for Exchange Server 2010, or other web applications you want to publish with Integrated Windows authentication. It is also possible to publish OWA with claims-based authentication using Exchange Server 2013 SP1 or newer, but that scenario is beyond the scope of this guide.
 
 === Deploy Quick Start templates
 
@@ -177,7 +177,7 @@ Establish an RDP connection to the WAP1 server. In *Control Panel*, choose *Admi
 [link=../docs/deployment_guide/images/image10.png]
 image::../docs/deployment_guide/images/image10.png[Additional5,image,width=603,height=145]
 
-=== Publish OWA 
+=== Publish OWA
 
 To publish OWA to the internet, you’ll need to create two rules. The first rule will be a pass-through authentication rule to the AD FS server. This will allow users to pre-authenticate before being connected to OWA.
 

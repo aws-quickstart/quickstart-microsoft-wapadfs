@@ -20,6 +20,6 @@ As shown in <<architecture1>>, this Quick Start deploys the following:
 ** Web Application Proxy servers to provide secure inbound connectivity to web applications.
 * In the private subnets:
 ** Two Active Directory domain controllers in a security group. These act as enterprise certificate authorities (CAs) to issue required SSL certificates to the AD FS infrastructure.*
-** Two Active Directory Federation Services (AD FS) servers in a security group running on Windows Server 2022. 
+** Two Active Directory Federation Services (AD FS) servers in a security group running on Windows Server 2022.
 
 [.small]#* The template that deploys the Quick Start into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.#
