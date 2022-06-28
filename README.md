@@ -1,4 +1,3 @@
-
 ## Microsoft Web Application Proxy on AWS
 
 For architectural details, step-by-step instructions, and customization options, see the [deployment guide](https://fwd.aws/Db5zJ?).
