@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.15">
+<meta name="generator" content="Asciidoctor 2.0.17">
 <meta name="description" content="Web Application Proxy and AD FS Deployment Guide on AWS">
 <meta name="keywords" content="Quick Start, AWS, Web Application Proxy and AD FS">
 <title>Web Application Proxy and AD FS on the AWS Cloud</title>
@@ -841,6 +841,38 @@ p.footer-text a{color:#d7d8d8}
 <li><a href="#_deployment_options">Deployment options</a></li>
 <li><a href="#_predeployment_steps">Predeployment steps</a></li>
 <li><a href="#_deployment_steps">Deployment steps</a></li>
+<li><a href="#_postdeployment_steps">Postdeployment steps</a>
+<ul class="sectlevel2">
+<li><a href="#_run_windows_updates">Run windows updates</a></li>
+</ul>
+</li>
+<li><a href="#design-considerations">Design considerations</a>
+<ul class="sectlevel2">
+<li><a href="#selecting-an-instance-type">Selecting an instance type</a></li>
+<li><a href="#database-options">Database options</a></li>
+<li><a href="#load-balancing">Load balancing</a></li>
+<li><a href="#certificates">Certificates</a></li>
+<li><a href="#domain-joined-proxies">Domain-joined proxies</a></li>
+<li><a href="#authentication-scenarios">Authentication Scenarios</a></li>
+</ul>
+</li>
+<li><a href="#_security">Security</a>
+<ul class="sectlevel2">
+<li><a href="#operating-system-security">Operating System Security</a></li>
+<li><a href="#security-groups">Security Groups</a></li>
+</ul>
+</li>
+<li><a href="#_publish_outlook_on_the_web_with_ad_fs_preauthentication">Publish Outlook on the web with AD FS preauthentication</a>
+<ul class="sectlevel2">
+<li><a href="#_deploy_quick_start_templates">Deploy Quick Start templates</a></li>
+<li><a href="#_connect_to_a_rd_gateway_instance">Connect to a RD Gateway instance</a></li>
+<li><a href="#_connect_to_the_adfs1_server">Connect to the ADFS1 server</a></li>
+<li><a href="#_connect_to_the_wap1_server">Connect to the WAP1 server</a></li>
+<li><a href="#_publish_owa">Publish OWA</a></li>
+<li><a href="#_test_owa_access">Test OWA access</a></li>
+</ul>
+</li>
+<li><a href="#_additional_resources">Additional resources</a></li>
 <li><a href="#_troubleshooting">Troubleshooting</a></li>
 <li><a href="#_feedback">Feedback</a></li>
 <li><a href="#_notices">Notices</a></li>
@@ -863,7 +895,7 @@ p.footer-text a{color:#d7d8d8}
 </div>
 </div>
 <div class="paragraph text-center">
-<p><strong>June 2022</strong><br>
+<p><strong>July 2022</strong><br>
 <em>Dave May, AWS Integration &amp; Automation team</em><br></p>
 </div>
 <div class="admonitionblock tip text-left">
@@ -903,8 +935,7 @@ Refer to the <a href="https://github.com/aws-quickstart/quickstart-microsoft-wap
 <h2 id="_architecture">Architecture</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Deploying this Quick Start for a new virtual private cloud (VPC) with
-default parameters builds the following Web Application Proxy and AD FS environment in the
+<p>Deploying this Quick Start for a new virtual private cloud (VPC) with default parameters builds the following Web Application Proxy and AD FS environment in the
 AWS Cloud.</p>
 </div>
 <div id="architecture1" class="imageblock">
@@ -914,34 +945,52 @@ AWS Cloud.</p>
 <div class="title">Figure 1. Quick Start architecture for <em>WAP and AD FS</em> on AWS</div>
 </div>
 <div class="paragraph">
-<p>The AWS CloudFormation template creates a fully functional AD FS federation server farm with Web Application Proxy on the AWS Cloud. The template deploys the following components:</p>
+<p>As shown in <a href="#architecture1">Figure 1</a>, this Quick Start deploys the following:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>A virtual private cloud (VPC) with resources distributed across two Availability Zones for high availability.*</p>
+<p>A highly available architecture that spans two Availability Zones.*</p>
 </li>
 <li>
-<p>Public subnets in each Availability Zone that provide access to and from the internet. The public subnets include network address translation (NAT) gateway instances for outbound internet access, and Remote Desktop Gateway (RD Gateway) instances in an Auto Scaling group for inbound remote administrative access. Web Application Proxy servers are deployed in the public subnets to help provide secure inbound connectivity to web applications.*</p>
+<p>A virtual private cloud (VPC) configured with public and private subnets, according to AWS best practices, to provide you with your own virtual network on AWS.*</p>
 </li>
 <li>
-<p>Private subnets in each Availability Zone for running enterprise workloads such as Active Directory domain controllers and AD FS servers, shielded from direct access over the internet.*</p>
+<p>An internet gateway to provide access to the internet.*</p>
 </li>
 <li>
-<p>In the private subnets, domain controllers that act as enterprise certificate authorities (CAs) that issue the required SSL certificates to the AD FS infrastructure. For production deployments, you might want to consider commercial certificates issued from a public CA, and we’ll cover this in greater detail later in this guide.</p>
+<p>In the public subnets:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Managed network address translation (NAT) gateways to allow outbound internet access for resources in the private subnets.*</p>
 </li>
 <li>
-<p>In the private subnets, two AD FS servers running on Windows Server 2022, which are deployed in each Availability Zone to support high availability and load distribution.</p>
+<p>Microsoft Remote Desktop Gateway (RD Gateway) instances in an Auto Scaling group to provide inbound remote administrative access.*</p>
 </li>
 <li>
-<p>Security groups to tightly control the flow of traffic between your Amazon EC2 instances.</p>
+<p>WAP servers to provide secure inbound connectivity to web applications.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>In the private subnets:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Two Active Directory domain controllers in a security group. These act as enterprise certificate authorities (CAs) to issue required SSL certificates to the AD FS infrastructure.*</p>
+</li>
+<li>
+<p>Two Active Directory Federation Services (AD FS) servers in a security group running on Windows Server 2022.</p>
+</li>
+</ul>
+</div>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>*The template that deploys the Quick Start into an existing VPC skips
-the components marked by asterisks and prompts you for your existing VPC
-configuration.</p>
+<p><span class="small">* The template that deploys the Quick Start into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.</span></p>
 </div>
 </div>
 </div>
@@ -970,7 +1019,7 @@ configuration.</p>
 <h2 id="_predeployment_steps">Predeployment steps</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>If you are deploying the WAP ADFS Quick Start into an existing VPC, ensure your Active Directory environment includes at least one certificate authority (CA). If you are using AWS Managed Microsoft Active Directory this will require you to have at least one domain-joined server that can be configured as the CA, since AWS Managed Microsoft Active Directory does not act as a CA natively. A domain-joined server can be promoted to a CA by executing the following PowerShell code from an elevated command prompt:</p>
+<p>If you are deploying the WAP ADFS Quick Start into an existing VPC, ensure that your Active Directory environment includes at least one certificate authority (CA). If you are using AWS Managed Microsoft Active Directory this will require you to have at least one domain-joined server that can be configured as the CA, since AWS Managed Microsoft Active Directory does not act natively as a CA. To promote a domain-joined server to a CA, run the following PowerShell code from an elevated command prompt:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1029,6 +1078,576 @@ Unless you are customizing the Quick Start templates for your own projects, don&
 </div>
 </div>
 <div class="sect1">
+<h2 id="_postdeployment_steps">Postdeployment steps</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_run_windows_updates">Run windows updates</h3>
+<div class="paragraph">
+<p>In order to ensure the deployed servers' operating systems and installed applications have the latest Microsoft updates, run Windows Update on each server.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Create an RDP session from the Remote Desktop Gateway server to each deployed server.</p>
+</li>
+<li>
+<p>Open the <strong>Settings</strong> application.</p>
+</li>
+<li>
+<p>Open <strong>Update &amp; Security</strong>.</p>
+</li>
+<li>
+<p>Click <strong>Check for updates</strong>.</p>
+</li>
+<li>
+<p>Install any updates and reboot if necessary.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="design-considerations">Design considerations</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Although this Quick Start is designed for to support 1,000 to 15,000 users, there are a number of options. The following recommendations can help determine the minimum number of servers to deploy for your scenario. These recommendations are based on a hardware profile that supports 8 CPU cores, 4 GiB of RAM, and a 1 gigabit network connection.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Fewer than 1,000 users</strong> – A small environment can use existing infrastructure instead of running dedicated AD FS servers. If you need to support fewer than 1,000 users, you can install AD FS on at least two of your domain controllers. Ideally, these domain controllers should be in two separate Availability Zones.</p>
+</li>
+<li>
+<p><strong>1,000 to 15,000 users</strong> – In this scenario, Microsoft recommends using a dedicated AD FS and WAP server infrastructure. The AD FS database can run using a Windows Internal Database (WID), so you’ll need four servers (two WAP and two AD FS).</p>
+</li>
+<li>
+<p><strong>15,000 to 60,000 users</strong> – For large environments, Microsoft recommends using three to five dedicated AD FS servers, and at least two dedicated WAP servers. Note that if you’re scaling beyond five dedicated AD FS servers, you’ll need a dedicated SQL Server instance instead of running a WID.</p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="selecting-an-instance-type">Selecting an instance type</h3>
+<div class="paragraph">
+<p>AD FS is considered a processor-bound workload, meaning that CPU resources are the highest in demand. This Quick Start uses C4 compute-optimized instances by default.</p>
+</div>
+<div class="paragraph">
+<p>Specifically, the c4.2xlarge instance type is used to provide 8 vCPUs and 15 GiB of memory to meet or exceed requirements, based on the recommendations in the previous section. Additionally, the c4.2xlarge instance type supports Amazon EBS optimization, enhanced networking, and high network performance, which results in higher packets per second, lower latency, and lower jitter. Although c4.2xlarge provides more memory than required, it’s a great candidate for workloads running in a production environment.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="database-options">Database options</h3>
+<div class="paragraph">
+<p>The recommended topology for AD FS is to create a federation server farm that includes at least two AD FS servers. When you install AD FS on the first server, the federation server farm is created. You can join the next server to the farm, and then load-balance those servers.</p>
+</div>
+<div class="paragraph">
+<p>An AD FS federation server farm uses a database to hold configuration data. For farms with five or fewer servers, you can use a Windows Internal Database (WID). The primary AD FS server will have a read/write copy of this database. The secondary AD FS servers in the farm receive updates from the primary server to a read-only copy of the WID. If the primary AD FS server fails, the secondary server can still process authentication requests, but you cannot make configuration changes until either the primary server is brought back online or the secondary server is converted to primary.</p>
+</div>
+<div class="paragraph">
+<p>For federation server farms that have more than five AD FS servers, you’ll need to use a SQL Server database for the configuration database. When you use SQL Server for your AD FS database, all members in the federation server farm have write access to the configuration data.</p>
+</div>
+<div class="paragraph">
+<p>Microsoft recommends that you use WID until you scale past five AD FS servers. This Quick Start utilizes WID with AD FS by default.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="load-balancing">Load balancing</h3>
+<div class="paragraph">
+<p>For production deployments, you should implement load balancing to make your WAP and AD FS services highly available. You can use Elastic Load Balancing or a third-party virtual load balancer appliance.</p>
+</div>
+<div class="paragraph">
+<p>Both the WAP and AD FS layers can be load balanced individually with Elastic Load Balancing. You can deploy an Internet-facing load balancer for the WAP layer that will service users accessing published web applications over the Internet. In addition, you can configure an internal load balancer for the AD FS servers. You would then configure the WAP layer to point to the load-balanced DNS name (for example, <code>sts.example.com</code>) that resolves to the internal load balancer.</p>
+</div>
+<div class="paragraph">
+<p>To take advantage of header inspection, it is recommended that Application Load Balancers (rather than Network Load Balancers or Classic Load Balancers) be deployed. You should configure the internet-facing load balancer for the WAP layer to accept HTTPS requests on port 443 and to forward requests to the WAP servers. You must assign a certificate obtained from a trusted third-party CA to the listener for the internet-facing load balancer. For listener of the internal load balancer, also configured to accept HTTPS requests on port 443, you can assign an internally-signed certificate.</p>
+</div>
+<div class="paragraph">
+<p>For detailed load-balancing and health-check requirements, refer to <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-requirements">AD FS Requirements</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="certificates">Certificates</h3>
+<div class="paragraph">
+<p>Certificates are required to install both the WAP and AD FS components. This Quick Start automates the deployment and installation of these components by using certificates issued from an internal enterprise CA, which runs on the domain controller infrastructure. You can replace these certificates in your own production deployments. The requirements and recommendations for both the WAP and AD FS layers are discussed in the next two sections.</p>
+</div>
+<div class="sect3">
+<h4 id="web-application-proxy-certificates">Web Application proxy certificates</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Issuing CA</strong> – Typically, the WAP infrastructure will use certificates issued from a commercial or public CA, such as DigiCert or Verisign, which should be installed in the computer’s personal certificate store. Using a public CA generally prevents you from having to install root certificates on your client devices. You can use your own public key infrastructure (PKI) to issue the WAP certificates. If you do, ensure that the client devices trust the issuing CA. To do this, install the root certificate on the devices and configure the URL of your certificate-revocation list to be externally accessible.</p>
+</li>
+<li>
+<p><strong>Certificate FQDNs</strong> – You can explicitly set the certificate subject and subject alternative name (SAN) fields, or you can choose to use a wildcard certificate (for example, <code>*.example.com</code>). For explicit naming, set the subject field to the AD FS federation service name (for example, <code>sts.example.com</code>). If you plan to use the workplace join feature, you’ll also need two SAN entries: one for the federation service name (for example, <code>sts.example.com</code>) and one for enterprise registration in the format <code>enterpriseregistration.<em>yourdomain</em>.com</code>. Additionally, you’ll want SAN entries for any fully qualified domain name (FQDN) that you will be publishing, such as externally facing SharePoint sites or Outlook on the web (OWA).</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="ad-fs-certificates">AD FS certificates</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Issuing CA</strong> – Typically, the AD FS infrastructure will use certificates issued from an internal PKI, such as an enterprise Active Directory CA. This is because the servers in the infrastructure are not internet-facing. This is especially useful in an Active Directory domain environment where all domain-joined machines will trust the issuing CA by default. If you choose not to join your WAP servers, you can install the CA root certificate on those servers in the computer’s trusted root CA store. If you do not have an existing PKI implementation, it’s probably easiest to use the same public certificate on both the WAP and AD FS servers.</p>
+</li>
+<li>
+<p><strong>Certificate FQDNs</strong> – The AD FS certificate requires the federation service name to be set on the subject field (for example, <code>sts.example.com</code>). Or, you can use a wildcard certificate.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="domain-joined-proxies">Domain-joined proxies</h3>
+<div class="paragraph">
+<p>As your WAP servers are deployed to public subnets, you may choose not to join them to a domain. This is a typical practice for server workloads running in a perimeter zone. However, if the web application you want to publish must support Integrated Windows authentication, you should join the WAP servers.</p>
+</div>
+<div class="paragraph">
+<p>This Quick Start automatically joins the WAP servers to the Active Directory Domain Services environment. For help publishing a web application that uses Integrated Windows authentication, refer to <a href="#_publish_outlook_on_the_web_with_ad_fs_preauthentication"><em>Publish Outlook on the web with AD FS preauthentication</em></a>, later in this guide.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="authentication-scenarios">Authentication Scenarios</h3>
+<div class="paragraph">
+<p>Publishing web applications with WAP supports three authentication scenarios:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>AD FS preauthentication</strong> – In this scenario, users authenticate against AD FS before gaining access to the published web application. This requires that you add an AD FS relying party trust to the federation service. For detailed coverage on AD FS preauthentication flow, see <a href="https://technet.microsoft.com/en-us/library/dn383640.aspx">Publish Applications using AD FS Preauthentication</a> in the Microsoft TechNet Library.</p>
+</li>
+<li>
+<p><strong>Client certificate preauthentication</strong> – In this scenario, one or more external servers connect to an on-premises web application through the WAP infrastructure using a certificate for authentication. Despite the name, this scenario should not be used for client devices that connect to a published web application. For more information, see <a href="https://technet.microsoft.com/en-us/library/dn584096.aspx">Publish Applications using Client Certificate Preauthentication</a>.</p>
+</li>
+<li>
+<p><strong>Pass-through preauthentication</strong> – In this scenario, access to the web application is proxied directly to the backend server without preauthentication against AD FS. This is the option you would use to make AD FS externally accessible. Subsequently published applications that use AD FS preauthentication access AD FS via pass-through preauthentication.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For an example that covers both AD FS and pass-through preauthentication, refer to <a href="#_publish_outlook_on_the_web_with_ad_fs_preauthentication"><em>Publish Outlook on the web with AD FS preauthentication</em></a>, later in this guide.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_security">Security</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When you build systems on the AWS infrastructure, security responsibilities are shared between you and AWS. This shared model can reduce your operational burden as AWS operates, manages, and controls the components from the host operating system and virtualization layer down to the physical security of the facilities in which the services operate. In turn, you assume responsibility and management of the guest operating system (including updates and security patches), other associated applications, as well as the configuration of the AWS-provided security group firewall. For more information about security on AWS, visit the <a href="http://aws.amazon.com/security/">AWS Security Center</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="operating-system-security">Operating System Security</h3>
+<div class="paragraph">
+<p>All the Windows Servers deployed by this Quick Start are domain-joined. You can authenticate to these instances by using the <a href="mailto:stackadmin@example.com">stackadmin@example.com</a> domain administrator account. You can specify the password for this account as you launch the stack. You can retrieve the local administrator password for domain-joined instances by using the <code>KeyPairName</code> parameter specified during the launch. Operating system patches are your responsibility and should be performed on a periodic basis.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="security-groups">Security Groups</h3>
+<div class="paragraph">
+<p>A security group acts as a firewall that controls the traffic for one or more instances. When you launch an instance, you associate one or more security groups with the instance. You add rules to each security group that allow traffic to or from its associated instances. You can modify the rules for a security group at any time. The new rules are automatically applied to all instances that are associated with the security group.</p>
+</div>
+<div class="paragraph">
+<p>The security groups created and assigned to the individual instances as part of this solution are restricted as much as possible while allowing access to the various functions needed by AD FS and WAP. After deployment, review security groups and further restrict access as needed.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_publish_outlook_on_the_web_with_ad_fs_preauthentication">Publish Outlook on the web with AD FS preauthentication</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this section, you&#8217;ll learn how to deploy WAP and AD FS infrastructure on top of the Microsoft Exchange on the AWS Cloud Quick Start and publish OWA to the internet using WAP and AD FS.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The template for WAP and AD FS provided with this guide is built to work with existing VPCs that have two public and two private subnets, and an existing Active Directory Domain Services implementation. More specifically, it is designed to work with the existing Microsoft-based AWS Quick Starts, such as Exchange Server, SharePoint Server, and Lync Server.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In this section, the process of publishing OWA uses Integrated Windows authentication. You can follow the same general process for Exchange Server 2010, or other web applications you want to publish with Integrated Windows authentication. It is also possible to publish OWA with claims-based authentication using Exchange Server 2013 SP1 or newer, but that scenario is beyond the scope of this guide.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_deploy_quick_start_templates">Deploy Quick Start templates</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Deploy the <a href="https://fwd.aws/NvamP">Microsoft Exchange on the AWS Cloud Quick Start</a>.</p>
+</li>
+<li>
+<p>Deploy the <a href="https://fwd.aws/5VrKP">Web Application Proxy and AD FS template</a>. During deployment, specify the <code>KeyPairName</code> for your chosen AWS Region and the IDs for your existing VPC and public and private subnets.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_connect_to_a_rd_gateway_instance">Connect to a RD Gateway instance</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Initiate a Remote Desktop Protocol (RDP) connection to one of the deployed RD Gateway instances. You can retrieve the Elastic IP address (EIP) of the RD Gateway servers from the <a href="https://us-east-1.console.aws.amazon.com/ec2/v2/home?region=us-east-1#Home:">Amazon EC2 console</a>. Use RDP to connect to the first Exchange server (<code>exch1</code>).</p>
+</li>
+<li>
+<p>On the first Exchange server (<code>exch1</code>), navigate to the <a href="https://exch1/ecp">Exchange Admin Center</a> in a web browser. Sign in using the <code>stackadmin</code> user account and password you specified when deploying the Microsoft Exchange on AWS stack.</p>
+<div id="Additional1" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image6.png"><img src="docs/deployment_guide/images/image6.png" alt="Additional1" width="532" height="299"></a>
+</div>
+<div class="title">Figure 2. Logging into the Exchange Admin Center</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="5">
+<li>
+<p>In the left navigation pane, under <strong>Servers</strong>, choose <strong>Virtual directories</strong>.</p>
+<div id="Additional2" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image7.png"><img src="docs/deployment_guide/images/image7.png" alt="Additional2" width="546" height="308"></a>
+</div>
+<div class="title">Figure 3. Viewing the virtual directories on EXCH1</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="6">
+<li>
+<p>Choose <strong>owa (Default Web Site)</strong> on the EXCH1 server. Choose <strong>Authentication</strong>, <strong>Integrated Windows authentication</strong>, and then choose <strong>Save</strong>. You should also change the corresponding setting on the ECP virtual directory on EXCH1.</p>
+<div id="Additional3" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image8.png"><img src="docs/deployment_guide/images/image8.png" alt="Additional3" width="480" height="302"></a>
+</div>
+<div class="title">Figure 4. Setting OWA authentication to Integrated Windows</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In a load-balanced production environment, modify this setting on each Exchange server that is running the Client Access role.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_connect_to_the_adfs1_server">Connect to the ADFS1 server</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Establish an RDP connection to the ADFS1 server. In <strong>Control Panel</strong>, choose <strong>Administrative Tools</strong>, and then launch the <strong>ADFS Management</strong> snap-in.</p>
+</li>
+<li>
+<p>Start the wizard. Open the context (right-click) menu for <strong>Trust Relationships</strong>, and then choose <strong>Add Non-Claims-Aware Relying Party Trust</strong>.</p>
+<div id="Additional4" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image9.png"><img src="docs/deployment_guide/images/image9.png" alt="Additional4" width="446" height="241"></a>
+</div>
+<div class="title">Figure 5. Adding a non-claims-aware relying party trust</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="3">
+<li>
+<p>Choose <strong>Start</strong>. Enter a display name such as <code>OWA</code>. Provide a unique identifier string for the non-claims-aware relying party trust. Use the default service name created by the Quick Start (for example, <code>http://sts.example.com/adfs/services/trust</code>) for the URL.</p>
+</li>
+<li>
+<p>Indicate that you do not want to configure multifactor authentication, and then choose <strong>Next</strong>.</p>
+</li>
+<li>
+<p>Go through the remaining screens without making changes. On the final screen, select <strong>Open the Edit Issuance Authorization Rules</strong> and then choose <strong>Close</strong>.</p>
+</li>
+<li>
+<p>On the <strong>Edit Claim Rules</strong> screen, choose <strong>Add Rule</strong>, <strong>Permit Access to All Users</strong>, and then choose <strong>Finish</strong>.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_connect_to_the_wap1_server">Connect to the WAP1 server</h3>
+<div class="paragraph">
+<p>Establish an RDP connection to the WAP1 server. In <strong>Control Panel</strong>, choose <strong>Administrative Tools</strong>, and then launch the <strong>Remote Access Management</strong> snap-in.</p>
+</div>
+<div id="Additional5" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image10.png"><img src="docs/deployment_guide/images/image10.png" alt="Additional5" width="603" height="145"></a>
+</div>
+<div class="title">Figure 6. Viewing the Remote Access Management console</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_publish_owa">Publish OWA</h3>
+<div class="paragraph">
+<p>To publish OWA to the internet, you’ll need to create two rules. The first rule will be a pass-through authentication rule to the AD FS server. This will allow users to pre-authenticate before being connected to OWA.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Under <strong>Tasks</strong>, choose <strong>Publish</strong>.</p>
+</li>
+<li>
+<p>On the Welcome screen, choose <strong>Next</strong>. On the <strong>Preauthentication</strong> tab, choose <strong>Pass-through</strong>.</p>
+<div id="Additional6" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image11.png"><img src="docs/deployment_guide/images/image11.png" alt="Additional6" width="486" height="183"></a>
+</div>
+<div class="title">Figure 7. Selecting the pass-through pre-authentication method</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="3">
+<li>
+<p>Provide a name for the rule (for example, <code>ADFS</code>). Specify the external URL, the external certificate, and the backend server URL as shown in <a href="#Additional7">Figure 8</a>.</p>
+<div id="Additional7" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image12.png"><img src="docs/deployment_guide/images/image12.png" alt="Additional7" width="488" height="233"></a>
+</div>
+<div class="title">Figure 8. Configuring the publishing rule</div>
+</div>
+<div class="paragraph">
+<p><strong>Note</strong> If you’ve implemented internal load balancing for the AD FS tier, you can set the backend server URL to a load-balanced endpoint instead of an individual server name.</p>
+</div>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="4">
+<li>
+<p>Choose <strong>Publish,</strong> and then <strong>Close</strong> to exit the wizard.</p>
+</li>
+<li>
+<p>Choose <strong>Publish</strong> again to create a new rule for OWA. This time, set the preauthentication method to <strong>Active Directory Federation Services (AD FS)</strong>, and then choose <strong>Next</strong>.</p>
+<div id="Additional8" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image13.png"><img src="docs/deployment_guide/images/image13.png" alt="Additional8" width="488" height="233"></a>
+</div>
+<div class="title">Figure 9. Selecting the AD FS pre-authentication method</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="6">
+<li>
+<p>For the relying party for the application, select the relying party trust you created on the AD FS server, and then choose <strong>Next</strong>.</p>
+<div id="Additional9" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image14.png"><img src="docs/deployment_guide/images/image14.png" alt="Additional9" width="488" height="233"></a>
+</div>
+<div class="title">Figure 10. Selecting the relying party</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="7">
+<li>
+<p>Provide a name such as OWA for the rule. Specify the external URL, external certificate, backend URL, and service principal name (SPN) for the backend server, as shown in <a href="#Additional10">Figure 11</a>.</p>
+<div id="Additional10" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image15.png"><img src="docs/deployment_guide/images/image15.png" alt="Additional10" width="488" height="233"></a>
+</div>
+<div class="title">Figure 11. Configuring rule details</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you’ve implemented internal load balancing for the Exchange client access tier, you can set the backend server URL and SPN to a load-balanced endpoint instead of an individual server name.
+</td>
+</tr>
+</table>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="8">
+<li>
+<p>Choose <strong>Publish</strong> and close the wizard.</p>
+</li>
+<li>
+<p>Establish an RDP connection to DC1. In <strong>Control Panel</strong>, choose <strong>Administrative Tools</strong>, and then launch the <strong>Active Directory Users and Computers</strong> snap-in.</p>
+</li>
+<li>
+<p>Navigate to the <strong>Computers</strong> container, right-click the WAP1 computer, and then choose <strong>Properties</strong>. On the <strong>Delegation</strong> tab, choose <strong>Trust this computer for delegation to specified services only</strong>. Check the option to use any authentication protocol, and add the HTTP service type on the EXCH1 computer to the list, as shown in Figure 15. Choose <strong>Apply</strong>, and then choose <strong>OK</strong>.</p>
+<div id="Additional11" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image16.png"><img src="docs/deployment_guide/images/image16.png" alt="Additional11" width="315" height="353"></a>
+</div>
+<div class="title">Figure 12. Configuring Kerberos constrained delegation</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_test_owa_access">Test OWA access</h3>
+<div class="paragraph">
+<p>Now you are ready to test accessing OWA from an external workstation or server over the internet.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>If you did not use your own domain name, you’ll need to edit the hosts file on your machine to allow your computer to resolve the endpoints at <code>example.com</code>. Add a mapping for <code>sts.example.com</code> and <code>mail.example.com</code> to your local hosts file. Ensure that both hosts resolve to the public EIP of the WAP1 server.</p>
+</li>
+<li>
+<p>Open a web browser from your external workstation or server. Navigate to <code>mail.example.com</code>. Sign in using the <code>stackadmin</code> user name and password.</p>
+<div id="Additional12" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image17.png"><img src="docs/deployment_guide/images/image17.png" alt="Additional12" width="315" height="353"></a>
+</div>
+<div class="title">Figure 13. Pre-authenticating to AD FS</div>
+</div>
+<div class="paragraph">
+<p>If the authentication is successful, the connection should be proxied to the EXCH1 server through WAP, as shown in <a href="#Additional13">Figure 14</a>.</p>
+</div>
+<div id="Additional13" class="imageblock">
+<div class="content">
+<a class="image" href="../docs/deployment_guide/images/image18.png"><img src="docs/deployment_guide/images/image18.png" alt="Additional13" width="315" height="353"></a>
+</div>
+<div class="title">Figure 14. Connected to the published application</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_additional_resources">Additional resources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>AWS services</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://aws.amazon.com/documentation/cloudformation/">AWS CloudFormation</a></p>
+</li>
+<li>
+<p><a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html">Amazon Elastic Block Store (Amazon EBS)</a></p>
+</li>
+<li>
+<p><a href="https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/">Amazon EC2</a></p>
+</li>
+<li>
+<p><a href="http://aws.amazon.com/documentation/vpc/">Amazon VPC</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Microsoft Web Application Proxy and AD FS</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://technet.microsoft.com/en-us/library/gg749899.aspx">Planning for AD FS Server Capacity</a></p>
+</li>
+<li>
+<p><a href="https://technet.microsoft.com/en-us/library/dn383650.aspx">Planning to Publish Applications Using Web Application Proxy</a></p>
+</li>
+<li>
+<p><a href="https://technet.microsoft.com/en-us/library/dn383644.aspx">Configure the Web Application Proxy Infrastructure</a></p>
+</li>
+<li>
+<p><a href="https://technet.microsoft.com/en-us/library/dn383662.aspx">Install and Configure the Web Application Proxy Server</a></p>
+</li>
+<li>
+<p><a href="https://technet.microsoft.com/en-us/library/dn383640.aspx">Publish Applications using AD FS Preauthentication</a></p>
+</li>
+<li>
+<p><a href="https://technet.microsoft.com/en-us/library/dn383639.aspx">Publish Applications using Pass-through Preauthentication</a></p>
+</li>
+<li>
+<p><a href="https://blogs.aws.amazon.com/security/post/Tx71TWXXJ3UI14/Enabling-Federation-to-AWS-using-Windows-Active-Directory-ADFS-and-SAML-2-0">Enabling Federation to AWS using Windows Active Directory, ADFS, and SAML 2.0</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Deploying Microsoft software on AWS</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://aws.amazon.com/microsoft/">Microsoft on AWS</a></p>
+</li>
+<li>
+<p><a href="https://d0.awsstatic.com/whitepapers/aws-microsoft-platform-security.pdf">Secure Microsoft applications on AWS</a></p>
+</li>
+<li>
+<p><a href="https://aws.amazon.com/windows/mslicensemobility/">Microsoft Licensing Mobility</a></p>
+</li>
+<li>
+<p><a href="https://aws.amazon.com/windows/msdn/">MSDN on AWS</a></p>
+</li>
+<li>
+<p><a href="https://aws.amazon.com/net/">AWS Windows and .NET Developer Center</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Tools</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://technet.microsoft.com/en-us/library/dn383651.aspx">Best Practices Analyzer for Web Application Proxy</a></p>
+</li>
+<li>
+<p><a href="https://aws.amazon.com/marketplace/">Load-balancing solutions in the AWS Marketplace</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Associated Quick Start reference deployments</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://fwd.aws/NvamP?">Microsoft Exchange on the AWS Cloud</a></p>
+</li>
+<li>
+<p><a href="https://fwd.aws/N6e7B?">Active Directory Domain Services on the AWS Cloud</a></p>
+</li>
+<li>
+<p><a href="https://fwd.aws/5VrKP?">Remote Desktop Gateway on AWS</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_troubleshooting">Troubleshooting</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1075,10 +1694,17 @@ Unless you are customizing the Quick Start templates for your own projects, don&
 <footer>
     <p class="footer-text">
         <!-- We can use document attributes: -->
-        <!-- Generated with Asciidoctor v2.0.15. -->
+        <!-- Generated with Asciidoctor v2.0.17. -->
         <a href="https://aws.amazon.com/privacy/">Privacy</a> | <a href="https://aws.amazon.com/terms/">Site terms</a> |
         &copy; 2022, Amazon Web Services, Inc. or its affiliates. All rights reserved.
     </p>
 </footer>
 </body>
 </html>
+<!--
+repo commit:
+727947f5ef660231c14790cdfe858509532d8991
+
+submodule config:
+ 4ef16b77d6020a462feba269030c80f9088e6d1b docs/boilerplate (remotes/origin/revert-logo-1-g4ef16b7)
+-->
