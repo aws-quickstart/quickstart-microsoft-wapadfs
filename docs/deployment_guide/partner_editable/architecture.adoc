@@ -17,7 +17,7 @@ As shown in <<architecture1>>, this Quick Start deploys the following:
 * In the public subnets:
 ** Managed network address translation (NAT) gateways to allow outbound internet access for resources in the private subnets.*
 ** Microsoft Remote Desktop Gateway (RD Gateway) instances in an Auto Scaling group to provide inbound remote administrative access.*
-** Web Application Proxy servers to provide secure inbound connectivity to web applications.
+** WAP servers to provide secure inbound connectivity to web applications.
 * In the private subnets:
 ** Two Active Directory domain controllers in a security group. These act as enterprise certificate authorities (CAs) to issue required SSL certificates to the AD FS infrastructure.*
 ** Two Active Directory Federation Services (AD FS) servers in a security group running on Windows Server 2022.
