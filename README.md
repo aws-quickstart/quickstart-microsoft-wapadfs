@@ -1,4 +1,4 @@
-## Microsoft Web Application Proxy on AWS
+## Microsoft Web Application Proxy with AD FS on AWS
 
 For architectural details, step-by-step instructions, and customization options, see the [deployment guide](https://fwd.aws/Db5zJ?).
 
