@@ -50,6 +50,7 @@ Metadata:
           - Adfs2NetBIOSName
           - Wap1NetBIOSName
           - Wap2NetBIOSName
+          - EnableAdvancedAudtingandMetrics
       - Label:
           default: AWS Quick Start configuration
         Parameters:
@@ -81,6 +82,8 @@ Metadata:
         default: Domain NetBIOS name
       EbsEncryptionKmsKeyId:
         default: KMS Key for EBS encryption
+      EnableAdvancedAudtingandMetrics:
+        default: Advanced Auditing and Metrics for WAP and ADFS Instances
       KeyPairName:
         default: Key pair name
       LatestAmiId:
@@ -154,6 +157,13 @@ Parameters:
   EbsEncryptionKmsKeyId:
     Default: alias/aws/ebs
     Description: The identifier of the AWS KMS key to use for Amazon EBS encryption. You can specify the KMS key using any of the following; Key ID, Key alias, Key ARN, Alias ARN
+    Type: String
+  EnableAdvancedAudtingandMetrics:
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'false'
+    Description: Enable advanced auditing and metrics and upload them to CloudWatch using the Amazon Kinesis Agent for Microsoft Windows
     Type: String
   KeyPairName:
     Description: Public/private key pairs allow you to securely connect to your instance after it launches
@@ -366,6 +376,13 @@ Resources:
           DomainNetBIOSName:
             description: Domain NetBIOS Name
             type: String
+          EnableAdvancedAudtingandMetrics:
+            allowedValues:
+              - 'true'
+              - 'false'
+            default: 'false'
+            description: Enable advanced auditing and metrics
+            type: String
           QSS3BucketName:
             description: Quick Start S3 Bucket Name
             type: String
@@ -506,6 +523,10 @@ Resources:
                       @{
                           Name    = 'ComputerManagementDsc'
                           Version = '8.5.0'
+                      },
+                      @{
+                          Name = 'AuditPolicyDsc'
+                          Version = '1.4.0.0'
                       }
                   )
 
@@ -651,6 +672,10 @@ Resources:
                   }
                   $Secret = Get-SecretInfo -DomainNetBIOSName '{{ DomainNetBIOSName }}' -SecretArn '{{ DomainAdminUserSecret }}'
                   Install-FirstADFS -Credential $Secret.Credentials -DirectoryType '{{ DirectoryType }}' -Password $Secret.UserPassword -Username $Secret.Username 
+                  If ('{{EnableAdvancedAudtingandMetrics}}' -eq 'true') {
+                    Set-DcAuditDscConfiguration
+                    Set-LogsAndMetricsCollection -Role "ADFS" -Stackname '{{StackName}}'
+                  }
                   Start-CleanUp
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: 'true'
@@ -672,6 +697,10 @@ Resources:
                   }
                   $Secret = Get-SecretInfo -DomainNetBIOSName '{{ DomainNetBIOSName }}' -SecretArn '{{ DomainAdminUserSecret }}'
                   Install-AdditionalADFS -Credential $Secret.Credentials -DirectoryType '{{ DirectoryType }}' -FirstAdfsServerBIOSName '{{ Adfs1NetBIOSName }}' -Password $Secret.UserPassword
+                  If ('{{EnableAdvancedAudtingandMetrics}}' -eq 'true') {
+                    Set-DcAuditDscConfiguration
+                    Set-LogsAndMetricsCollection -Role "ADFS" -Stackname '{{StackName}}'
+                  }
                   Start-CleanUp
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: 'true'
@@ -694,6 +723,10 @@ Resources:
                   }
                   $Secret = Get-SecretInfo -DomainNetBIOSName '{{ DomainNetBIOSName }}' -SecretArn '{{ DomainAdminUserSecret }}'
                   Install-WAP -Credential $Secret.Credentials -FirstAdfsServerBIOSName '{{ Adfs1NetBIOSName }}' -Password $Secret.UserPassword
+                  If ('{{EnableAdvancedAudtingandMetrics}}' -eq 'true') {
+                    Set-DcAuditDscConfiguration
+                    Set-LogsAndMetricsCollection -Role "WAP" -Stackname '{{StackName}}'
+                  }
                   Start-CleanUp
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: 'true'
@@ -746,6 +779,8 @@ Resources:
           Value: !Ref 'Wap1NetBIOSName'
         - Key: Domain
           Value: !Ref 'DomainDNSName'
+        - Key: Role
+          Value: Web Application Proxy
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
@@ -770,6 +805,8 @@ Resources:
           Value: !Ref 'Wap2NetBIOSName'
         - Key: Domain
           Value: !Ref 'DomainDNSName'
+        - Key: Role
+          Value: Web Application Proxy
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
@@ -794,6 +831,8 @@ Resources:
           Value: !Ref 'Adfs1NetBIOSName'
         - Key: Domain
           Value: !Ref 'DomainDNSName'
+        - Key: Role
+          Value: Active Directory Federation Services
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
@@ -826,6 +865,8 @@ Resources:
           Value: !Ref 'Adfs2NetBIOSName'
         - Key: Domain
           Value: !Ref 'DomainDNSName'
+        - Key: Role
+          Value: Active Directory Federation Services
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
@@ -838,46 +879,32 @@ Resources:
         - !Ref 'ADFSSecurityGroup'
         - !Ref 'DomainMemberSGID'
       KeyName: !Ref 'KeyPairName'
-      UserData: !Base64
-        Fn::Join:
-          - ''
-          - - "<powershell>\n"
-            - 'Start-SSMAutomationExecution -DocumentName '
-            - !Sub '"${WapAdfsAutomationDoc}"'
-            - ' -Parameter @{'
-            - '"Adfs1NetBIOSName"='
-            - !Sub '"${Adfs1NetBIOSName}"'
-            - ';"Adfs2NetBIOSName"='
-            - !Sub '"${Adfs2NetBIOSName}"'
-            - ';"DirectoryType"='
-            - !Sub '"${DirectoryType}"'
-            - ';"DomainAdminUserSecret"='
-            - !Sub '"${DomainAdminUserSecret}"'
-            - ';"DomainController1IP"='
-            - !Sub '"${DomainController1IP}"'
-            - ';"DomainController2IP"='
-            - !Sub '"${DomainController2IP}"'
-            - ';"DomainDNSName"='
-            - !Sub '"${DomainDNSName}"'
-            - ';"DomainNetBIOSName"='
-            - !Sub '"${DomainNetBIOSName}"'
-            - ';"Wap1NetBIOSName"='
-            - !Sub '"${Wap1NetBIOSName}"'
-            - ';"Wap2NetBIOSName"='
-            - !Sub '"${Wap2NetBIOSName}"'
-            - ';"QSS3BucketName"='
-            - !If [UsingDefaultBucket, !Sub '"${QSS3BucketName}-${AWS::Region}"', !Sub '"${QSS3BucketName}"']
-            - ';"QSS3BucketRegion"='
-            - !If [UsingDefaultBucket, !Sub '"${AWS::Region}"', !Sub '"${QSS3BucketRegion}"']
-            - ';"QSS3KeyPrefix"='
-            - !Sub '"${QSS3KeyPrefix}"'
-            - ';"StackName"='
-            - !Sub '"${AWS::StackName}"'
-            - ';"URLSuffix"='
-            - !Sub '"${AWS::URLSuffix}"'
-            - '}'
-            - "\n"
-            - "</powershell>\n"
+      UserData: 
+        Fn::Base64: !Sub
+        - |
+          <powershell>
+          $Params = @{
+              Adfs1NetBIOSName = '${Adfs1NetBIOSName}'
+              Adfs2NetBIOSName = '${Adfs2NetBIOSName}'
+              DirectoryType = '${DirectoryType}'
+              DomainAdminUserSecret = '${DomainAdminUserSecret}'
+              DomainController1IP = '${DomainController1IP}'
+              DomainController2IP = '${DomainController2IP}'
+              DomainDNSName = '${DomainDNSName}'
+              DomainNetBIOSName = '${DomainNetBIOSName}'
+              EnableAdvancedAudtingandMetrics = '${EnableAdvancedAudtingandMetrics}'
+              QSS3BucketName = '${QSS3BucketName}'
+              QSS3BucketRegion =  '${QSS3BucketRegion}'
+              QSS3KeyPrefix = '${QSS3KeyPrefix}'
+              StackName = '${AWS::StackName}'
+              URLSuffix = '${AWS::URLSuffix}'
+              Wap1NetBIOSName = '${Wap1NetBIOSName}'
+              Wap2NetBIOSName = '${Wap2NetBIOSName}'
+          }
+          Start-SSMAutomationExecution -DocumentName '${WapAdfsAutomationDoc}' -Parameter $Params
+          </powershell>
+        - QSS3BucketName: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Sub '${QSS3BucketName}']
+          QSS3BucketRegion: !If [UsingDefaultBucket, !Sub '${AWS::Region}', !Sub '${QSS3BucketRegion}']
   WAPSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
