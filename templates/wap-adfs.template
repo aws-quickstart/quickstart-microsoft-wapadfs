@@ -138,7 +138,7 @@ Parameters:
     Description: IP of DNS server that can resolve Active Directory domain (Must be accessible)
     Type: String
   DomainDNSName:
-    AllowedPattern: '[a-zA-Z0-9\-]+\..+'
+    AllowedPattern: '^([a-zA-Z0-9]+[\.\-])+([a-zA-Z0-9])+$'
     Default: example.com
     Description: Fully qualified domain name (FQDN) of the domain the WAP / ADFS instances will join e.g. corp.example.com
     MaxLength: '25'
